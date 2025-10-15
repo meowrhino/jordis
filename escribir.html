@@ -18,8 +18,8 @@
     <h2>escribir diario</h2>
 
     <div class="meta">
-      <span id="lugar" class="ph" contenteditable="true" data-placeholder="lugar" title="escribe el lugar"></span>
-      <span id="fecha" class="ph" contenteditable="true" data-placeholder="fecha" title="Click para elegir fecha"></span>
+      <span id="lugar" class="ph" contenteditable="true" data-placeholder="lugar">barcelona</span>
+      <span id="fecha" class="ph" contenteditable="true" data-placeholder="fecha" title="Click para elegir fecha">fecha</span>
       <!-- <span id="numero" class="ph" contenteditable="true" data-placeholder="numero" title="número de la entrada">1</span> -->
     </div>
 
@@ -151,13 +151,6 @@
       }
     }
     setTodayDate(true);
-    // Log inicial de fecha y hora
-    (function(){
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const min = String(now.getMinutes()).padStart(2, '0');
-      console.log('[init]', 'fecha=', fechaSpan.textContent.trim(), 'hora=', `${hh}:${min}`);
-    })();
     fechaSpan.setAttribute('role', 'button');
     fechaSpan.setAttribute('tabindex', '0');
     fechaSpan.addEventListener('click', () => {
@@ -183,29 +176,11 @@
     fechaInput.addEventListener('change', updateFecha);
     fechaInput.addEventListener('input', updateFecha);
 
-    function isValidDateYMD(s) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-      const [y, m, d] = s.split('-').map(Number);
-      const dt = new Date(Date.UTC(y, m - 1, d));
-      return dt.getUTCFullYear() === y && (dt.getUTCMonth() + 1) === m && dt.getUTCDate() === d;
-    }
-
     document.getElementById('download').addEventListener('click', (e) => {
       e.preventDefault();
       const lugar = document.getElementById('lugar').textContent.trim();
       const fecha = document.getElementById('fecha').textContent.trim();
       const htmlContenido = document.getElementById('editor').innerHTML;
-
-      // Validación de lugar y fecha
-      const errores = [];
-      const lugarOk = !!lugar && lugar.toLowerCase() !== 'lugar';
-      if (!lugarOk) errores.push('“lugar”');
-      const fechaOk = isValidDateYMD(fecha);
-      if (!fechaOk) errores.push('“fecha” (formato YYYY-MM-DD)');
-      if (errores.length) {
-        alert('Revisa ' + errores.join(' y ') + '.');
-        return;
-      }
 
       const now = new Date();
       const hh = String(now.getHours()).padStart(2, '0');
@@ -232,11 +207,10 @@
       const blob = new Blob([payload], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const hoy = new Date();
-      const hh = String(hoy.getHours()).padStart(2, '0');
-      const min = String(hoy.getMinutes()).padStart(2, '0');
+      const ymd = hoy.toISOString().slice(0, 10);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${fecha}_${hh}-${min}.html`;
+      a.download = `${ymd}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
