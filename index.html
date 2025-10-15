@@ -2,189 +2,24 @@
 <html lang="es">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>el mundo de las jordis</title>
-
-    <!-- Tipografías -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Island+Moments&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap"
-        rel="stylesheet">
-
-    <style>
-        :root {
-            /* Colors */
-            --color-text: #333;
-            --color-bg: #fff;
-
-            /* Typography sizes */
-            --h1-size: clamp(40px, 12vw, 200px);
-            /* desktop base; móvil se sobreescribe */
-            --p-size: clamp(16px, 1.25vw, 20px);
-            --nav-size: clamp(18px, 2.8vw, 28px);
-
-            /* H1 layout */
-            --h1-gap-x: clamp(40px, 8vw, 140px);
-            /* margen izquierda h1 (desktop) */
-            --h1-gap-y: clamp(28px, 6vw, 88px);
-            /* margen superior h1 (desktop) */
-            --h1-hanging-indent: 3.5ch;
-            /* sangría desde 2ª línea */
-            --h1-max-desktop: 28ch;
-            /* ancho de línea aprox. escritorio */
-            --h1-max-mobile: 20ch;
-            /* ancho de línea aprox. móvil */
-
-            /* Nav/menu layout */
-            --nav-offset: clamp(28px, 5vw, 80px);
-            /* separación derecha/abajo */
-            --nav-gap: clamp(18px, 3vw, 44px);
-            /* gap base entre enlaces */
-            --nav-gap-scale: 1;
-            /* multiplicador del gap (móvil lo ajusta) */
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            background: var(--color-bg);
-            color: var(--color-text);
-        }
-
-        body {
-            font-family: "EB Garamond", serif;
-            display: grid;
-            grid-template-rows: 1fr auto;
-            /* título ocupa arriba, nav fijo aparte */
-            min-height: 100svh;
-            font-feature-settings: "kern" 1, "liga" 1, "clig" 1;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        /* Título principal con sangría a partir de la 2ª línea (hanging indent) */
-        h1 {
-            font-family: "Island Moments", cursive;
-            font-weight: 400;
-            line-height: 0.9;
-            font-size: var(--h1-size);
-            margin: var(--h1-gap-y) 0 0 var(--h1-gap-x);
-            max-width: var(--h1-max-desktop);
-            padding-left: var(--h1-hanging-indent);
-            text-indent: calc(-1 * var(--h1-hanging-indent));
-            /* 1ª línea sin sangría */
-        }
-
-        /* “Botones” (en realidad enlaces de texto) */
-        .menu {
-            position: fixed;
-            right: var(--nav-offset);
-            bottom: calc(var(--nav-offset) / 2);
-            display: flex;
-            gap: calc(var(--nav-gap) * var(--nav-gap-scale));
-            align-items: flex-end;
-            justify-content: flex-end;
-            flex-wrap: wrap;
-            font-family: "Island Moments", cursive;
-            font-size: var(--nav-size);
-        }
-
-        .menu a {
-            color: inherit;
-            white-space: nowrap;
-            text-decoration: none;
-            transition: color 0.6s ease-in-out;
-        }
-
-        .menu a:hover,
-        .menu a:focus-visible {
-            color: #999; /* gris clarito */
-            animation: blinkSoft 1.4s ease-in-out infinite alternate;
-            outline: none;
-        }
-
-        .h1-link {
-            color: inherit;
-            text-decoration: none;
-            transition: color 0.6s ease-in-out;
-        }
-
-        .h1-link:hover,
-        .h1-link:focus-visible {
-            color: #999;
-            animation: blinkSoft 1.4s ease-in-out infinite alternate;
-            outline: none;
-        }
-
-        /* Animación de parpadeo suave */
-        @keyframes blinkSoft {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.6; }
-        }
-
-        /* Texto corrido, por si luego lo necesitas */
-        p {
-            font-size: var(--p-size);
-            max-width: 60ch;
-            margin: var(--h1-gap-y) var(--h1-gap-x);
-        }
-
-        /* Responsivo móvil: menú vertical */
-        @media (max-width: 640px) {
-            :root {
-                --h1-size: clamp(64px, 18vw, 150px);
-                /* h1 más grande en móvil */
-                --p-size: clamp(18px, 4.5vw, 22px);
-                /* párrafo un poco mayor */
-                --nav-size: clamp(22px, 6.5vw, 36px);
-                /* botones más grandes en móvil */
-
-                --h1-gap-x: clamp(28px, 9vw, 64px);
-                /* más separado izquierda */
-                --h1-gap-y: clamp(40px, 12vw, 72px);
-                /* más separado arriba */
-
-                --nav-offset: clamp(14px, 5vw, 24px);
-                /* botones más cerca del borde */
-                --nav-gap: clamp(6px, 3.5vw, 14px);
-                /* gap base pequeño */
-                --nav-gap-scale: 0;
-                /* gap efectivo = 0 */
-            }
-
-            h1 {
-                max-width: var(--h1-max-mobile);
-            }
-
-            .menu {
-                flex-direction: column;
-                align-items: flex-end;
-            }
-
-            .menu a {
-                padding: 8px 4px;
-                line-height: 1.15;
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>el mundo de las jordis</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Island+Moments&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
-
-    <h1>el mundo de<br><a class="h1-link" href="lasjordis.html">las jordis</a></h1>
-
-    <nav class="menu" aria-label="Secciones">
-        <a href="diario.html">diario</a>
-        <a href="libros.html">libros</a>
-        <a href="pensamientos.html">pensamientos</a>
-        <a href="extras.html">extras</a>
-    </nav>
+<body class="home">
+  <h1>el mundo de<br><a class="h1-link" href="htmls/lasjordis.html">las jordis</a></h1>
+  <nav class="nav-right menu" aria-label="Secciones">
+    <a href="htmls/diario.html">diario</a>
+    <a href="htmls/libros.html">libros</a>
+    <a href="htmls/pensamientos.html">pensamientos</a>
+    <a href="htmls/extras.html">extras</a>
+  </nav>
 
 </body>
 

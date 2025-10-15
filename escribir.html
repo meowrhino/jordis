@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>escribir diario</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Island+Moments&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <!-- En tu repo, si este archivo vive en /htmls pon ../style.css. Si lo dejas en raíz, cámbialo a style.css -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="page-escribir">
+  <main class="editor">
+    <h2>escribir diario</h2>
+
+    <div class="meta">
+      <span id="lugar" class="ph" contenteditable="true" data-placeholder="lugar" title="escribe el lugar"></span>
+      <span id="fecha" class="ph" contenteditable="true" data-placeholder="fecha" title="Click para elegir fecha"></span>
+      <!-- <span id="numero" class="ph" contenteditable="true" data-placeholder="numero" title="número de la entrada">1</span> -->
+    </div>
+
+    <input type="date" id="fechaPicker" class="visually-hidden" aria-hidden="true" tabindex="-1" />
+
+    <div class="box">
+      <div id="editor" contenteditable="true"></div>
+    </div>
+
+    <div class="toolbar" aria-label="Formato">
+      <button class="nav-btn" type="button" onclick="fmt('u')">subrayar</button>
+      <button class="nav-btn" type="button" onclick="fmt('strong')">negrita</button>
+      <button class="nav-btn" type="button" onclick="fmt('em')">cursiva</button>
+      <button class="nav-btn" type="button" onclick="color('amarillo')">amarillo</button>
+      <button class="nav-btn" type="button" onclick="color('verde')">verde</button>
+      <button class="nav-btn" type="button" onclick="color('azul')">azul</button>
+      <button class="nav-btn" type="button" onclick="color('rosa')">rosa</button>
+    </div>
+
+    <div class="actions"><a href="#" id="download">descargar</a></div>
+  </main>
+
+  <script>
+    (function(){
+    for (const el of document.querySelectorAll('#lugar.ph')) {
+      el.addEventListener('focus', () => {
+        if (el.textContent.trim() === el.dataset.placeholder) el.textContent = '';
+      });
+      el.addEventListener('blur', () => {
+        if (el.textContent.trim() === '') el.textContent = el.dataset.placeholder;
+      });
+    }
+    for (const el of document.querySelectorAll('#fecha.ph')) {
+      el.addEventListener('focus', () => {
+        if (el.textContent.trim() === el.dataset.placeholder) el.textContent = '';
+      });
+      el.addEventListener('blur', () => {
+        if (el.textContent.trim() === '') el.textContent = el.dataset.placeholder;
+      });
+    }
+    /* numero desactivado por ahora
+    for (const el of document.querySelectorAll('#numero.ph')) {
+      el.addEventListener('focus', () => {
+        if (el.textContent.trim() === el.dataset.placeholder) el.textContent = '';
+      });
+      el.addEventListener('blur', () => {
+        if (el.textContent.trim() === '') el.textContent = '1';
+      });
+    }
+    */
+
+    const editor = document.getElementById('editor');
+
+    function surroundSelection(wrapper) {
+      editor.focus();
+      restoreSelection();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+      const range = sel.getRangeAt(0);
+      const frag = range.extractContents();
+      wrapper.appendChild(frag);
+      range.insertNode(wrapper);
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(wrapper);
+      newRange.collapse(false);
+      sel.addRange(newRange);
+      document.getElementById('editor').focus();
+    }
+
+    function fmt(tagName) {
+      restoreSelection();
+      const el = document.createElement(tagName);
+      surroundSelection(el);
+    }
+
+    function color(nombre) {
+      restoreSelection();
+      const span = document.createElement('span');
+      span.className = 'c-' + nombre;
+      surroundSelection(span);
+    }
+
+    function sanitizeFilename(s) {
+      return s.toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_.-]/g, '')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    }
+
+    // --- Selection management to keep formatting working when clicking buttons ---
+    let savedRange = null;
+
+    function saveSelection() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const r = sel.getRangeAt(0);
+      if (editor.contains(r.commonAncestorContainer)) {
+        savedRange = r.cloneRange();
+      }
+    }
+    function restoreSelection() {
+      if (!savedRange) return;
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+    editor.addEventListener('keyup', saveSelection);
+    editor.addEventListener('mouseup', saveSelection);
+    document.addEventListener('selectionchange', saveSelection);
+    // Prevent toolbar buttons from stealing focus (so selection stays)
+    document.querySelectorAll('.toolbar .nav-btn').forEach(btn => {
+      btn.addEventListener('mousedown', (e) => e.preventDefault());
+    });
+
+    // Fecha por defecto y selector
+    const fechaSpan = document.getElementById('fecha');
+    const fechaInput = document.getElementById('fechaPicker');
+    function setTodayDate(force = false) {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+      fechaInput.value = todayStr;
+      if (force || fechaSpan.textContent.trim() === '' || fechaSpan.textContent.trim() === fechaSpan.dataset.placeholder) {
+        fechaSpan.textContent = todayStr;
+      }
+    }
+    setTodayDate(true);
+    // Log inicial de fecha y hora
+    (function(){
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      console.log('[init]', 'fecha=', fechaSpan.textContent.trim(), 'hora=', `${hh}:${min}`);
+    })();
+    fechaSpan.setAttribute('role', 'button');
+    fechaSpan.setAttribute('tabindex', '0');
+    fechaSpan.addEventListener('click', () => {
+      if (typeof fechaInput.showPicker === 'function') {
+        fechaInput.showPicker();
+      } else {
+        fechaInput.click();
+      }
+    });
+    fechaSpan.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (typeof fechaInput.showPicker === 'function') {
+          fechaInput.showPicker();
+        } else {
+          fechaInput.click();
+        }
+      }
+    });
+    function updateFecha() {
+      fechaSpan.textContent = fechaInput.value;
+    }
+    fechaInput.addEventListener('change', updateFecha);
+    fechaInput.addEventListener('input', updateFecha);
+
+    function isValidDateYMD(s) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+      const [y, m, d] = s.split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      return dt.getUTCFullYear() === y && (dt.getUTCMonth() + 1) === m && dt.getUTCDate() === d;
+    }
+
+    document.getElementById('download').addEventListener('click', (e) => {
+      e.preventDefault();
+      const lugar = document.getElementById('lugar').textContent.trim();
+      const fecha = document.getElementById('fecha').textContent.trim();
+      const htmlContenido = document.getElementById('editor').innerHTML;
+
+      // Validación de lugar y fecha
+      const errores = [];
+      const lugarOk = !!lugar && lugar.toLowerCase() !== 'lugar';
+      if (!lugarOk) errores.push('“lugar”');
+      const fechaOk = isValidDateYMD(fecha);
+      if (!fechaOk) errores.push('“fecha” (formato YYYY-MM-DD)');
+      if (errores.length) {
+        alert('Revisa ' + errores.join(' y ') + '.');
+        return;
+      }
+
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const min = String(now.getMinutes()).padStart(2, '0');
+      const hora = `${hh}:${min}`;
+
+      const payload = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><title>${lugar || 'sin-lugar'} — ${fecha || ''}</title>
+<link rel="stylesheet" href="../style.css">
+<style>.c-amarillo{color:#F7C873}.c-verde{color:#3a7f4f}.c-azul{color:#2f5aa6}.c-rosa{color:#c9547d}u{text-underline-offset:.15em}</style>
+</head><body>
+<article class="entrada-diario">
+  <header>
+    <div class="lugar">${lugar}</div>
+    <time class="fecha">${fecha}</time>
+    <time class="hora">${hora}</time>
+  </header>
+  <section class="contenido">
+    ${htmlContenido}
+  </section>
+</article>
+</body></html>`;
+
+      const blob = new Blob([payload], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const hoy = new Date();
+      const hh = String(hoy.getHours()).padStart(2, '0');
+      const min = String(hoy.getMinutes()).padStart(2, '0');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fecha}_${hh}-${min}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+    })();
+  </script>
+</body>
+
+</html>
