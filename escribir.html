@@ -9,7 +9,6 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Island+Moments&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap"
     rel="stylesheet">
-  <!-- En tu repo, si este archivo vive en /htmls pon ../style.css. Si lo dejas en raíz, cámbialo a style.css -->
   <link rel="stylesheet" href="style.css" />
 </head>
 
@@ -18,204 +17,284 @@
     <h2>escribir diario</h2>
 
     <div class="meta">
-      <span id="lugar" class="ph" contenteditable="true" data-placeholder="lugar">barcelona</span>
-      <span id="fecha" class="ph" contenteditable="true" data-placeholder="fecha" title="Click para elegir fecha">fecha</span>
-      <!-- <span id="numero" class="ph" contenteditable="true" data-placeholder="numero" title="número de la entrada">1</span> -->
+      <span id="lugar" class="ph" contenteditable="true" data-placeholder="lugar" title="escribe el lugar"></span>
+      <span id="fecha" class="ph" contenteditable="true" data-placeholder="fecha"
+        title="Click para elegir fecha"></span>
+      <span id="hora" class="ph" data-placeholder="hora" title="se fija al descargar"></span>
     </div>
 
     <input type="date" id="fechaPicker" class="visually-hidden" aria-hidden="true" tabindex="-1" />
+    <input type="time" id="horaPicker" class="visually-hidden" aria-hidden="true" tabindex="-1" step="60" />
 
     <div class="box">
       <div id="editor" contenteditable="true"></div>
     </div>
 
-    <div class="toolbar" aria-label="Formato">
-      <button class="nav-btn" type="button" onclick="fmt('u')">subrayar</button>
-      <button class="nav-btn" type="button" onclick="fmt('strong')">negrita</button>
-      <button class="nav-btn" type="button" onclick="fmt('em')">cursiva</button>
-      <button class="nav-btn" type="button" onclick="color('amarillo')">amarillo</button>
-      <button class="nav-btn" type="button" onclick="color('verde')">verde</button>
-      <button class="nav-btn" type="button" onclick="color('azul')">azul</button>
-      <button class="nav-btn" type="button" onclick="color('rosa')">rosa</button>
+    <div class="toolbar" aria-label="Formato (simple)">
+      <button class="nav-btn" type="button" data-tag="u">subrayar</button>
+      <button class="nav-btn" type="button" data-tag="strong">negrita</button>
+      <button class="nav-btn" type="button" data-tag="em">cursiva</button>
+      <button class="nav-btn" type="button" data-color="amarillo">amarillo</button>
+      <button class="nav-btn" type="button" data-color="verde">verde</button>
+      <button class="nav-btn" type="button" data-color="azul">azul</button>
+      <button class="nav-btn" type="button" data-color="rosa">rosa</button>
     </div>
 
     <div class="actions"><a href="#" id="download">descargar</a></div>
   </main>
 
   <script>
-    (function(){
-    for (const el of document.querySelectorAll('#lugar.ph')) {
-      el.addEventListener('focus', () => {
-        if (el.textContent.trim() === el.dataset.placeholder) el.textContent = '';
-      });
-      el.addEventListener('blur', () => {
-        if (el.textContent.trim() === '') el.textContent = el.dataset.placeholder;
-      });
-    }
-    for (const el of document.querySelectorAll('#fecha.ph')) {
-      el.addEventListener('focus', () => {
-        if (el.textContent.trim() === el.dataset.placeholder) el.textContent = '';
-      });
-      el.addEventListener('blur', () => {
-        if (el.textContent.trim() === '') el.textContent = el.dataset.placeholder;
-      });
-    }
-    /* numero desactivado por ahora
-    for (const el of document.querySelectorAll('#numero.ph')) {
-      el.addEventListener('focus', () => {
-        if (el.textContent.trim() === el.dataset.placeholder) el.textContent = '';
-      });
-      el.addEventListener('blur', () => {
-        if (el.textContent.trim() === '') el.textContent = '1';
-      });
-    }
-    */
+    (function () {
+      'use strict';
 
-    const editor = document.getElementById('editor');
+      // —— Elements ——
+      const editor = document.getElementById('editor');
+      const fechaSpan = document.getElementById('fecha');
+      const fechaInput = document.getElementById('fechaPicker');
+      const horaSpan = document.getElementById('hora');
+      const horaInput = document.getElementById('horaPicker');
+      const lugarSpan = document.getElementById('lugar');
 
-    function surroundSelection(wrapper) {
-      editor.focus();
-      restoreSelection();
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-      const range = sel.getRangeAt(0);
-      const frag = range.extractContents();
-      wrapper.appendChild(frag);
-      range.insertNode(wrapper);
-      sel.removeAllRanges();
-      const newRange = document.createRange();
-      newRange.selectNodeContents(wrapper);
-      newRange.collapse(false);
-      sel.addRange(newRange);
-      document.getElementById('editor').focus();
-    }
+      // —— Helpers ——
+      const two = n => String(n).padStart(2, '0');
+      const isValidDateYMD = s => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+        const [y, m, d] = s.split('-').map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d));
+        return dt.getUTCFullYear() === y && (dt.getUTCMonth() + 1) === m && dt.getUTCDate() === d;
+      };
+      const isValidTimeHM = s => {
+        if (!/^\d{2}:\d{2}$/.test(s)) return false;
+        const [h, m] = s.split(':').map(Number);
+        return h >= 0 && h < 24 && m >= 0 && m < 60;
+      };
 
-    function fmt(tagName) {
-      restoreSelection();
-      const el = document.createElement(tagName);
-      surroundSelection(el);
-    }
-
-    function color(nombre) {
-      restoreSelection();
-      const span = document.createElement('span');
-      span.className = 'c-' + nombre;
-      surroundSelection(span);
-    }
-
-    function sanitizeFilename(s) {
-      return s.toLowerCase()
-        .replace(/\s+/g, '_')
-        .replace(/[^a-z0-9_.-]/g, '')
-        .replace(/_+/g, '_')
-        .replace(/^_+|_+$/g, '');
-    }
-
-    // --- Selection management to keep formatting working when clicking buttons ---
-    let savedRange = null;
-
-    function saveSelection() {
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-      const r = sel.getRangeAt(0);
-      if (editor.contains(r.commonAncestorContainer)) {
-        savedRange = r.cloneRange();
+      // —— Init ——
+      function setTodayDate() {
+        const now = new Date();
+        const s = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
+        fechaInput.value = s;
+        if (!fechaSpan.textContent.trim()) fechaSpan.textContent = s;
+        if (lugarSpan && !lugarSpan.textContent.trim()) lugarSpan.textContent = 'barcelona';
+        // Log & a11y
+        console.log('[init]', 'fecha=', fechaSpan.textContent.trim(), 'hora=', `${two(now.getHours())}:${two(now.getMinutes())}`);
+        fechaSpan.setAttribute('aria-label', 'fecha ' + fechaSpan.textContent.trim());
+        const hh0 = two(now.getHours());
+        const mm0 = two(now.getMinutes());
+        if (horaSpan) horaSpan.textContent = `${hh0}:${mm0}`;
+        if (horaInput) horaInput.value = `${hh0}:${mm0}`;
       }
-    }
-    function restoreSelection() {
-      if (!savedRange) return;
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(savedRange);
-    }
-    editor.addEventListener('keyup', saveSelection);
-    editor.addEventListener('mouseup', saveSelection);
-    document.addEventListener('selectionchange', saveSelection);
-    // Prevent toolbar buttons from stealing focus (so selection stays)
-    document.querySelectorAll('.toolbar .nav-btn').forEach(btn => {
-      btn.addEventListener('mousedown', (e) => e.preventDefault());
-    });
+      // —— Hora: abrir selector ——
+      horaSpan.setAttribute('role', 'button');
+      horaSpan.setAttribute('tabindex', '0');
+      horaSpan.addEventListener('click', () => (horaInput.showPicker ? horaInput.showPicker() : horaInput.click()));
+      horaSpan.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (horaInput.showPicker ? horaInput.showPicker() : horaInput.click()); }
+      });
+      horaInput.addEventListener('input', () => {
+        const v = horaInput.value;
+        if (isValidTimeHM(v)) {
+          horaSpan.textContent = v;
+          horaSpan.setAttribute('aria-label', 'hora ' + v);
+        }
+      });
 
-    // Fecha por defecto y selector
-    const fechaSpan = document.getElementById('fecha');
-    const fechaInput = document.getElementById('fechaPicker');
-    function setTodayDate(force = false) {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${yyyy}-${mm}-${dd}`;
-      fechaInput.value = todayStr;
-      if (force || fechaSpan.textContent.trim() === '' || fechaSpan.textContent.trim() === fechaSpan.dataset.placeholder) {
-        fechaSpan.textContent = todayStr;
+      // —— Fecha: abrir selector ——
+      fechaSpan.setAttribute('role', 'button');
+      fechaSpan.setAttribute('tabindex', '0');
+      fechaSpan.addEventListener('click', () => (fechaInput.showPicker ? fechaInput.showPicker() : fechaInput.click()));
+      fechaSpan.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); (fechaInput.showPicker ? fechaInput.showPicker() : fechaInput.click()); }
+      });
+      fechaInput.addEventListener('input', () => {
+        fechaSpan.textContent = fechaInput.value;
+        fechaSpan.setAttribute('aria-label', 'fecha ' + fechaInput.value);
+      });
+
+      // —— Formato básico ——
+      function getValidRange() {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) { alert('no hay texto seleccionado'); return null; }
+        const range = sel.getRangeAt(0);
+        if (range.collapsed) { alert('no hay texto seleccionado'); return null; }
+        if (!editor.contains(range.commonAncestorContainer)) { alert('no hay texto seleccionado'); return null; }
+        return range;
       }
-    }
-    setTodayDate(true);
-    fechaSpan.setAttribute('role', 'button');
-    fechaSpan.setAttribute('tabindex', '0');
-    fechaSpan.addEventListener('click', () => {
-      if (typeof fechaInput.showPicker === 'function') {
-        fechaInput.showPicker();
-      } else {
-        fechaInput.click();
+
+      function closestElement(node, predicate) {
+        let el = node && (node.nodeType === 1 ? node : node.parentElement);
+        while (el && el !== editor) { if (predicate(el)) return el; el = el.parentElement; }
+        return null;
       }
-    });
-    fechaSpan.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        if (typeof fechaInput.showPicker === 'function') {
-          fechaInput.showPicker();
-        } else {
-          fechaInput.click();
+
+      function unwrapElement(el) {
+        const parent = el.parentNode;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+      }
+
+      function elementsInRange(range, predicate) {
+        const out = [];
+        const walker = document.createTreeWalker(editor, NodeFilter.SHOW_ELEMENT, {
+          acceptNode(node) { return predicate(node) && range.intersectsNode(node) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; }
+        });
+        let n; while ((n = walker.nextNode())) out.push(n);
+        return out;
+      }
+
+      // Toggle para u/strong/em: elimina TODAS las etiquetas que intersectan la selección; si no hay, envuelve.
+      function toggleInlineTag(tagName) {
+        editor.focus();
+        const range = getValidRange(); if (!range) return;
+        const isTag = el => el && el.tagName && el.tagName.toLowerCase() === tagName.toLowerCase();
+
+        // 1) Buscar todas las etiquetas de ese tipo que intersectan el rango
+        let hits = elementsInRange(range, isTag);
+        // 1b) Si no hay hits, comprobar si un ancestro del inicio/fin es de ese tipo (caso rango dentro de una única etiqueta)
+        const startWrap = closestElement(range.startContainer, isTag);
+        const endWrap = closestElement(range.endContainer, isTag);
+        if (startWrap) hits.push(startWrap);
+        if (endWrap) hits.push(endWrap);
+        // Unicos y ordenar por profundidad (más profundo primero)
+        hits = Array.from(new Set(hits)).sort((a, b) => {
+          const depth = el => { let d = 0, x = el; while (x && x !== editor) { d++; x = x.parentElement; } return d; };
+          return depth(b) - depth(a);
+        });
+
+        if (hits.length) { hits.forEach(unwrapElement); return; }
+
+        // 2) No había etiquetas: envolver la selección preservando HTML interno
+        const wrapper = document.createElement(tagName);
+        try { range.surroundContents(wrapper); }
+        catch {
+          const frag = range.extractContents();
+          wrapper.appendChild(frag);
+          range.insertNode(wrapper);
         }
       }
-    });
-    function updateFecha() {
-      fechaSpan.textContent = fechaInput.value;
-    }
-    fechaInput.addEventListener('change', updateFecha);
-    fechaInput.addEventListener('input', updateFecha);
 
-    document.getElementById('download').addEventListener('click', (e) => {
-      e.preventDefault();
-      const lugar = document.getElementById('lugar').textContent.trim();
-      const fecha = document.getElementById('fecha').textContent.trim();
-      const htmlContenido = document.getElementById('editor').innerHTML;
+      // Colores exclusivos: modificar todas las spans coloreadas que intersecten el rango; si no hay, envolver.
+      function applyColor(colorName) {
+        editor.focus();
+        const range = getValidRange(); if (!range) return;
+        const targetCls = 'c-' + colorName;
+        const isColor = el => el.tagName && el.tagName.toLowerCase() === 'span' && /\bc-\w+\b/.test(el.className);
 
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const min = String(now.getMinutes()).padStart(2, '0');
-      const hora = `${hh}:${min}`;
+        let colorSpans = elementsInRange(range, isColor);
+        const startColor = closestElement(range.startContainer, isColor);
+        const endColor = closestElement(range.endContainer, isColor);
+        if (startColor) colorSpans.push(startColor);
+        if (endColor) colorSpans.push(endColor);
+        colorSpans = Array.from(new Set(colorSpans));
 
-      const payload = `<!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"><title>${lugar || 'sin-lugar'} — ${fecha || ''}</title>
-<link rel="stylesheet" href="../style.css">
-<style>.c-amarillo{color:#F7C873}.c-verde{color:#3a7f4f}.c-azul{color:#2f5aa6}.c-rosa{color:#c9547d}u{text-underline-offset:.15em}</style>
-</head><body>
-<article class="entrada-diario">
-  <header>
-    <div class="lugar">${lugar}</div>
-    <time class="fecha">${fecha}</time>
-    <time class="hora">${hora}</time>
-  </header>
-  <section class="contenido">
-    ${htmlContenido}
-  </section>
-</article>
-</body></html>`;
+        // ¿Toda/parte de la selección ya está en el mismo color?
+        const hasTargetColor = colorSpans.some(sp => sp.classList.contains(targetCls));
+        const onlyTargetColors = colorSpans.length > 0 && colorSpans.every(sp => sp.classList.contains(targetCls));
 
-      const blob = new Blob([payload], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const hoy = new Date();
-      const ymd = hoy.toISOString().slice(0, 10);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${ymd}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
+        if (onlyTargetColors) {
+          // TOGGLE: quitar el color objetivo en todos los spans intersectados
+          colorSpans.forEach(sp => {
+            sp.classList.remove(targetCls);
+            // si ya no queda ninguna clase c-xxx, desanidar el span si queda sin clases
+            if (!/\bc-\w+\b/.test(sp.className)) {
+              if (!sp.getAttributeNames || sp.getAttributeNames().length === 0 || sp.getAttributeNames().every(n => n === 'class' && sp.className.trim() === '')) {
+                // sin otras attrs/clases -> unwrap
+                unwrapElement(sp);
+              }
+            }
+          });
+          return;
+        }
+
+        if (hasTargetColor) {
+          // Mezcla de colores: algunos ya son del color objetivo y otros no. Unificamos todos al objetivo.
+          colorSpans.forEach(sp => {
+            sp.className = sp.className.replace(/\bc-\w+\b/g, '').trim();
+            sp.classList.add(targetCls);
+          });
+          return;
+        }
+
+        if (colorSpans.length) {
+          // Había colores pero de otro tipo: sustituimos todos por el objetivo
+          colorSpans.forEach(sp => {
+            sp.className = sp.className.replace(/\bc-\w+\b/g, '').trim();
+            sp.classList.add(targetCls);
+          });
+          return;
+        }
+
+        // No había color: envolver la selección preservando HTML interno
+        const span = document.createElement('span');
+        span.className = targetCls;
+        try { range.surroundContents(span); }
+        catch {
+          const frag = range.extractContents();
+          span.appendChild(frag);
+          range.insertNode(span);
+        }
+      }
+
+      // Toolbar
+      document.querySelectorAll('.toolbar .nav-btn').forEach(btn => {
+        btn.addEventListener('mousedown', e => e.preventDefault()); // no perder selección
+        btn.addEventListener('click', () => {
+          const tag = btn.getAttribute('data-tag');
+          const col = btn.getAttribute('data-color');
+          if (tag) {
+            toggleInlineTag(tag);
+            return;
+          }
+          if (col) {
+            applyColor(col);
+            return;
+          }
+        });
+      });
+
+      // —— Descargar ——
+      document.getElementById('download').addEventListener('click', (e) => {
+        e.preventDefault();
+        try {
+          const lugar = lugarSpan.textContent.trim() || 'sin-lugar';
+          const fecha = fechaSpan.textContent.trim();
+          const errs = [];
+          if (!lugar) errs.push('“lugar”');
+          if (!isValidDateYMD(fecha)) errs.push('“fecha” (YYYY-MM-DD)');
+          if (errs.length) { alert('Revisa ' + errs.join(' y ') + '.'); return; }
+
+          // Hora final: si hay hora válida en UI, usarla; si no, ahora mismo
+          let hora = (horaSpan && isValidTimeHM(horaSpan.textContent.trim())) ? horaSpan.textContent.trim() : '';
+          if (!hora) {
+            const now = new Date();
+            hora = `${two(now.getHours())}:${two(now.getMinutes())}`;
+            if (horaSpan) {
+              horaSpan.textContent = hora;
+              horaSpan.setAttribute('aria-label', 'hora ' + hora);
+            }
+            if (horaInput) horaInput.value = hora;
+          }
+          const [hh, mm] = hora.split(':');
+
+          // Solo contenido del editor tal cual (con sus etiquetas)
+          const payload = editor.innerHTML.trim();
+          const blob = new Blob([payload], { type: 'text/html' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${fecha}_${hh}-${mm}_${lugar}.html`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error('[download error]', err);
+          alert('Ha ocurrido un error preparando la descarga. Revisa la consola.');
+        }
+      });
+
+      // —— Go ——
+      setTodayDate();
     })();
   </script>
 </body>

@@ -197,6 +197,10 @@ u {
   justify-content: center;
   align-items: center;
 }
+/* Cada item de la meta ocupa solo su contenido */
+.meta > * { flex: 0 0 auto; min-width: 0; }
+/* La hora no fuerza ancho mínimo */
+#hora { min-width: 0; }
 
 .ph {
   font-family: "Island Moments", cursive;
@@ -209,6 +213,9 @@ u {
   min-width: 6ch;
   text-align: center;
 }
+/* Placeholders visuales sin texto real en el DOM */
+.ph:empty::before { content: attr(data-placeholder); opacity: .5; }
+.ph:not(:empty) { min-width: 0; }
 
 #lugar.ph[contenteditable="true"] {
   cursor: text;
