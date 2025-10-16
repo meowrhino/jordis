@@ -1,0 +1,9 @@
+<!DOCTYPE html><html lang='es'><head><meta charset='utf-8'><title>extras</title><link rel='stylesheet' href='css/style.css'></head><body>
+<main class='editor'><h2>escribir extras</h2>
+<div class='meta'><span id='titulo' contenteditable='true' data-placeholder='título'></span><span id='tematica' contenteditable='true' data-placeholder='temática'></span></div>
+<div class='box'><div id='editor' contenteditable='true'></div></div>
+<div class='toolbar'><button class='nav-btn' data-action='link'>link</button><button class='nav-btn' data-tag='u'>subrayar</button><button class='nav-btn' data-tag='strong'>negrita</button><button class='nav-btn' data-tag='em'>cursiva</button><button class='nav-btn' data-color='amarillo'>amarillo</button><button class='nav-btn' data-color='verde'>verde</button><button class='nav-btn' data-color='azul'>azul</button><button class='nav-btn' data-color='rosa'>rosa</button></div>
+<div class='actions'><a href='#' id='download'>descargar</a></div>
+</main><script src='js/editor-core.js'></script>
+<script>SimpleEditor.init({root:document,editor:'#editor',toolbarSel:'.toolbar .nav-btn',downloadSel:'#download',filename:()=>`${Date.now()}_extra.html`});</script>
+</body></html>
