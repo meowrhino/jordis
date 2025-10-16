@@ -10,15 +10,19 @@
     <link rel='stylesheet' href='../style.css'>
 </head>
 
-<body class="page-escribir">
+<body class="page-escribir" data-editor="capitulos">
     <main class='editor'>
         <h2>escribir capítulo</h2>
         <div class='meta'>
+          <div class="meta-row">
             <span id="titulo"   class="ph" contenteditable="true" data-placeholder="título"></span>
             <span id="capitulo" class="ph" contenteditable="true" data-placeholder="capítulo"></span>
+          </div>
+          <div class="meta-row">
             <span id="libro"    class="ph" contenteditable="true" data-placeholder="libro"></span>
             <span id="fecha"    class="ph" contenteditable="true" data-placeholder="fecha" title="Click para elegir fecha"></span>
             <span id="hora"     class="ph" data-placeholder="hora" title="Click para elegir hora"></span>
+          </div>
         </div>
         <input type="date" id="fechaPicker" class="visualmente-hidden visually-hidden" aria-hidden="true" tabindex="-1" />
         <input type="time" id="horaPicker"  class="visualmente-hidden visually-hidden" aria-hidden="true" tabindex="-1" step="60" />
@@ -34,13 +38,11 @@
     <script src="../js/editor-core.js"></script>
     <script>
       (function(){
-        const $ = s => document.querySelector(s);
-        // Bootstrap core (fields + toolbar); we'll override download to customize payload & filename
         SimpleEditor.init({
           root: document,
           editor: '#editor',
           toolbarBtnSel: '.toolbar .nav-btn',
-          // do not wire download here; we attach a custom handler below
+          downloadBtn: '#download',
           fields: {
             titulo:   { default: '' },
             capitulo: { default: '' },
@@ -48,37 +50,6 @@
             fecha:    { picker: 'date', inputId: 'fechaPicker' },
             hora:     { picker: 'time', inputId: 'horaPicker' }
           }
-        });
-
-        // Custom download: filename [libro]_[capitulo]_[fecha-hora].html and content: <h3>titulo</h3> + editor HTML
-        document.getElementById('download').addEventListener('click', function(e){
-          e.preventDefault();
-          const editor = $('#editor');
-          const titulo = ($('#titulo')?.textContent || '').trim();
-          const cap    = ($('#capitulo')?.textContent || '').trim().replace(/\s+/g,'_') || 'capitulo';
-          const libro  = ($('#libro')?.textContent    || '').trim().replace(/\s+/g,'_') || 'libro';
-          const fecha  = ($('#fecha')?.textContent    || '').trim();
-          let   hora   = ($('#hora')?.textContent     || '').trim();
-          // if hour invalid/empty, default to now and reflect in UI
-          if (!/^\d{2}:\d{2}$/.test(hora)) {
-            const now = new Date();
-            hora = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-            const horaSpan = $('#hora');
-            if (horaSpan) { horaSpan.textContent = hora; horaSpan.setAttribute('aria-label','hora '+hora); }
-            const horaInput = $('#horaPicker'); if (horaInput) horaInput.value = hora;
-          }
-          const [hh,mm] = hora.split(':');
-
-          const payload = `<h3>${titulo}</h3>\n${(editor.innerHTML||'').trim()}`;
-          const blob = new Blob([payload], { type: 'text/html' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${libro}_${cap}_${fecha}-${hh}-${mm}.html`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
         });
       })();
     </script>

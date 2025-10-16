@@ -323,10 +323,22 @@ u {
 
 .meta {
   display: flex;
-  gap: min(8vw, 80px);
+  flex-direction: column; /* contenedor en columna para filas */
   justify-content: center;
   align-items: center;
 }
+
+/* Agrupar filas en la barra meta (capítulos/diario) */
+.meta-row {
+  display: flex;
+  flex-direction: row; /* asegurar fila */
+  gap: min(8vw, 80px);
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+}
+.meta-row .ph { min-width: 6ch; }
+
 /* Cada item de la meta ocupa solo su contenido */
 .meta > * { flex: 0 0 auto; min-width: 0; }
 /* La hora no fuerza ancho mínimo */

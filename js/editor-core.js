@@ -3,29 +3,23 @@
 
   // ——— Utils ———
   const two = n => String(n).padStart(2,'0');
-  const isValidDateYMD = s => /^(\d{4})-(\d{2})-(\d{2})$/.test(s) && (()=>{
+  const text = (root, sel) => (root.querySelector(sel)?.textContent || '').trim();
+  const setText = (el, v, aria) => { el.textContent = v; if (aria) el.setAttribute('aria-label', aria + ' ' + v); };
+  const sanitize = s => (s || '').trim().replace(/\s+/g,'_');
+
+  const isValidDateYMD = s => /^(\d{4})-(\d{2})-(\d{2})$/.test(s) && ( ()=>{
     const [y,m,d]=s.split('-').map(Number); const t=new Date(Date.UTC(y,m-1,d));
     return t.getUTCFullYear()===y && (t.getUTCMonth()+1)===m && t.getUTCDate()===d;
   })();
-  const isValidTimeHM = s => /^(\d{2}):(\d{2})$/.test(s) && (()=>{
+  const isValidTimeHM = s => /^(\d{2}):(\d{2})$/.test(s) && ( ()=>{
     const [h,m]=s.split(':').map(Number); return h>=0&&h<24&&m>=0&&m<60;
   })();
 
   // ——— Core DOM helpers ———
-  const closestElement = (root,node,pred)=>{
-    let el = node && (node.nodeType===1 ? node : node.parentElement);
-    while (el && el !== root) { if (pred(el)) return el; el = el.parentElement; }
-    return null;
-  };
+  const closestElement = (root,node,pred)=>{ let el = node && (node.nodeType===1 ? node : node.parentElement); while (el && el !== root) { if (pred(el)) return el; el = el.parentElement; } return null; };
   const unwrapElement = el => { const p=el.parentNode; while(el.firstChild) p.insertBefore(el.firstChild,el); p.removeChild(el); };
-  const elementsInRange = (root,range,pred)=>{
-    const out=[]; const w=document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, { acceptNode(n){ return pred(n)&&range.intersectsNode(n)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP; } });
-    let n; while((n=w.nextNode())) out.push(n); return out;
-  };
-  const getValidRange = (root)=>{
-    const sel=window.getSelection(); if(!sel||sel.rangeCount===0) return null; const r=sel.getRangeAt(0);
-    if(r.collapsed) return null; if(!root.contains(r.commonAncestorContainer)) return null; return r;
-  };
+  const elementsInRange = (root,range,pred)=>{ const out=[]; const w=document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, { acceptNode(n){ return pred(n)&&range.intersectsNode(n)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP; } }); let n; while((n=w.nextNode())) out.push(n); return out; };
+  const getValidRange = (root)=>{ const sel=window.getSelection(); if(!sel||sel.rangeCount===0) return null; const r=sel.getRangeAt(0); if(r.collapsed) return null; if(!root.contains(r.commonAncestorContainer)) return null; return r; };
 
   // ——— Formatting actions ———
   function toggleInlineTag(root, tagName){
@@ -76,7 +70,7 @@
       if (cfg.default && !el.textContent.trim()) el.textContent = cfg.default;
       if (cfg.picker==='date'){
         const input = root.querySelector('#'+cfg.inputId);
-        const set   = v=>{ el.textContent=v; el.setAttribute('aria-label', id+' '+v); };
+        const set   = v=> setText(el, v, id);
         el.setAttribute('role','button'); el.setAttribute('tabindex','0');
         el.addEventListener('click',()=> (input.showPicker?input.showPicker():input.click()));
         el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); (input.showPicker?input.showPicker():input.click()); }});
@@ -85,7 +79,7 @@
       }
       if (cfg.picker==='time'){
         const input = root.querySelector('#'+cfg.inputId);
-        const set   = v=>{ el.textContent=v; el.setAttribute('aria-label', id+' '+v); };
+        const set   = v=> setText(el, v, id);
         el.setAttribute('role','button'); el.setAttribute('tabindex','0');
         el.addEventListener('click',()=> (input.showPicker?input.showPicker():input.click()));
         el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); (input.showPicker?input.showPicker():input.click()); }});
@@ -95,10 +89,44 @@
     });
   }
 
-  // ——— Download (only editor innerHTML) ———
-  function downloadHTML({root, editorSel, name}){
-    const editor = root.querySelector(editorSel);
-    const payload = (editor && editor.innerHTML ? editor.innerHTML.trim() : '');
+  // ——— Atomic getters for filename pieces ———
+  const atoms = {
+    getLugar:  root => sanitize( text(root,'#lugar') || 'sin-lugar' ),
+    getFecha:  root => text(root,'#fecha'),
+    getFechaRequired(root){ const f = text(root,'#fecha'); if(!isValidDateYMD(f)){ alert('Revisa “fecha” (YYYY-MM-DD)'); throw new Error('fecha requerida'); } return f; },
+    getHoraOrNow(root){ let h = text(root,'#hora'); if(!isValidTimeHM(h)){ const now=new Date(); h=`${two(now.getHours())}:${two(now.getMinutes())}`; const el=root.querySelector('#hora'); if(el) setText(el,h,'hora'); const inp=root.querySelector('#horaPicker'); if(inp) inp.value=h; } return h; },
+    getTitulo: root => text(root,'#titulo'),
+    getCap:    root => sanitize( text(root,'#capitulo') || 'capitulo' ),
+    getLibro:  root => sanitize( text(root,'#libro')    || 'libro' ),
+    getTematica: root => sanitize( text(root,'#tematica') || 'tematica' ),
+  };
+
+  // ——— Filename builders per editor type ———
+  const nameBuilders = {
+    diario(root){ const fecha = atoms.getFechaRequired(root); const hora = atoms.getHoraOrNow(root); const [hh,mm]=hora.split(':'); const lugar=atoms.getLugar(root); return `${fecha}_${hh}-${mm}_${lugar}.html`; },
+    capitulos(root){ const fecha = atoms.getFechaRequired(root); const hora = atoms.getHoraOrNow(root); const [hh,mm]=hora.split(':'); const libro=atoms.getLibro(root); const cap=atoms.getCap(root); return `${libro}_${cap}_${fecha}-${hh}-${mm}.html`; },
+    extras(root){
+      const fecha = atoms.getFechaRequired(root);          // YYYY-MM-DD
+      const tematica = atoms.getTematica(root);            // “tematica” saneada
+      // Formato pedido: "extra"[tematica][fecha] (sin hora)
+      return `extra_${tematica}_${fecha}.html`;
+    }
+  };
+
+  // ——— Payload builders per editor type ———
+  const payloadBuilders = {
+    diario(root, editorSel){ const ed=root.querySelector(editorSel); return (ed?.innerHTML || '').trim(); },
+    capitulos(root, editorSel){ const ed=root.querySelector(editorSel); const titulo = atoms.getTitulo(root); const body = (ed?.innerHTML || '').trim(); return `<h3>${titulo||''}</h3>\n${body}`; },
+    extras(root, editorSel){ 
+      const ed = root.querySelector(editorSel); 
+      const titulo = atoms.getTitulo(root); 
+      const body = (ed?.innerHTML || '').trim(); 
+      return `<h3>${titulo||''}</h3>\n${body}`; 
+    }
+  };
+
+  // ——— Download ———
+  function download({root, editorSel, name, payload}){
     const blob = new Blob([payload], {type:'text/html'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
@@ -125,26 +153,27 @@
       });
     });
 
-    // Meta fields (placeholders + pickers)
+    // Meta fields
     initFields(root, config.fields);
 
-    // Download
-    if (config.downloadBtn && config.filenameFn){
+    // Download: use provided builders or auto by data-editor
+    const editorType = document.body.dataset.editor || 'diario';
+    const buildName   = config.filenameFn || nameBuilders[editorType] || nameBuilders.diario;
+    const buildPayload= config.payloadFn  || payloadBuilders[editorType]|| payloadBuilders.diario;
+
+    if (config.downloadBtn){
       const btn = root.querySelector(config.downloadBtn);
       btn && btn.addEventListener('click', (e)=>{
         e.preventDefault();
-        const name = config.filenameFn(root);
-        downloadHTML({root, editorSel: config.editor, name});
+        let name, payload;
+        try { name = buildName(root); } catch(err){ return; }
+        payload = buildPayload(root, config.editor);
+        download({root, editorSel: config.editor, name, payload});
       });
     }
 
-    // Expose small API if needed
-    return {
-      toggle: t=>toggleInlineTag(editor,t),
-      color:  c=>applyColor(editor,c),
-      link:   h=>applyLink(editor,h)
-    };
+    return { toggle: t=>toggleInlineTag(editor,t), color: c=>applyColor(editor,c), link: h=>applyLink(editor,h), atoms };
   }
 
-  window.SimpleEditor = { init, utils:{ two, isValidDateYMD, isValidTimeHM } };
+  window.SimpleEditor = { init, utils:{ two, isValidDateYMD, isValidTimeHM, sanitize }, atoms };
 })();
