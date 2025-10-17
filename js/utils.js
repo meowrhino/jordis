@@ -5,6 +5,21 @@ export async function readFileText(fp) {
   catch { return ''; }
 }
 
+export function extractMetaByIds(html) {
+  // Busca <span id="libro">…</span> etc. (robusto: permite comillas simples/dobles)
+  const get = (id) => {
+    const re = new RegExp(`<[^>]*id=["']${id}["'][^>]*>([\\s\\S]*?)<\\/[^>]+>`, 'i');
+    const m = html.match(re);
+    return m ? m[1].trim() : '';
+  };
+  return {
+    libro: get('libro'),
+    capitulo: get('capitulo'),
+    titulo: get('titulo'),
+    fecha: get('fecha'),
+  };
+}
+
 export function extractTitle(html) {
   const m = html.match(/<title>(.*?)<\/title>/i);
   return m ? m[1].trim() : '';
