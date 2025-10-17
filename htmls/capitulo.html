@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Island+Moments&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+    <title>capítulo</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        .cap-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 100dvh;
+        }
+
+        .menu.nav-left,
+        .menu.nav-right {
+            display: flex;
+            align-items: flex-end;
+            padding: clamp(8px, 2vw, 16px);
+        }
+
+        .menu.nav-left a,
+        .menu.nav-right a {
+            text-decoration: none;
+        }
+
+        .cap-main {
+            grid-column: 1 / -1;
+            padding: clamp(16px, 4vw, 48px);
+        }
+
+        .cap-h2 {
+            margin: 0 0 .3em 0;
+        }
+
+        .cap-h4 {
+            margin: 0 0 1.2em 0;
+            font-weight: 400;
+        }
+
+        .cap-h3 {
+            margin: 0 0 1.2em 0;
+            font-weight: 400;
+        }
+
+        .cap-body {
+            margin-top: clamp(8px, 2vw, 24px);
+        }
+
+        @media (min-width: 960px) {
+            .cap-wrap {
+                grid-template-columns: 1fr 3fr 1fr;
+            }
+
+            .cap-main {
+                grid-column: 1 / -1;
+            }
+
+            .cap-main-inner {
+                grid-column: 2;
+                max-width: 76ch;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cap-wrap">
+        <nav class="menu nav-left"><a href="../index.html">casa</a></nav>
+        <main class="cap-main">
+            <div class="cap-main-inner">
+                <h2 class="cap-h2" id="h2libro"></h2>
+                <h4 class="cap-h4" id="h4titulo"></h4>
+                <h3 class="cap-h3" id="h3detalle"></h3>
+                <article class="cap-body" id="capBody"></article>
+            </div>
+        </main>
+        <nav class="menu nav-right" id="navRight"></nav>
+    </div>
+
+    <script src="../js/lector-core.js"></script>
+    <script>LectorCore.init();</script>
+</body>
+
+</html>

@@ -73,7 +73,28 @@
     cont.innerHTML = `<li>${loadingText}</li>`;
 
     try {
-      const data = await fetchJSON(`/data/${categoria}.json`);
+      // Intentar raíz del sitio y, si falla (404), intentar ../data para páginas dentro de /htmls
+      const candidateUrls = [
+        `/data/${categoria}.json`,
+        `../data/${categoria}.json`
+      ];
+      let data = [];
+      let lastErr = null;
+      for (const url of candidateUrls) {
+        try {
+          data = await fetchJSON(url);
+          lastErr = null;
+          console.info('visualizador-core: usando', url);
+          break;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (lastErr) {
+        console.warn('visualizador-core: no se encontró JSON para', categoria, '— mostrando lista vacía.');
+        data = [];
+      }
+
       let items = Array.isArray(data) ? data.slice() : [];
 
       // Normalización: asegurar .path
@@ -111,4 +132,114 @@
   }
 
   global.VisualizadorCore = { init };
+})(window);
+
+// ---- lector-core.js (capítulo individual) ----
+(function (global) {
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  function fmtFechaBonita(yyyy_mm_dd){
+    const m = (yyyy_mm_dd||'').match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return (yyyy_mm_dd||'').trim();
+    const D = parseInt(m[3],10), Mo = parseInt(m[2],10)-1;
+    return `${D} de ${meses[Mo]}`;
+  }
+
+  async function fetchText(u){ const r = await fetch(u, {cache:'no-store'}); if(!r.ok) throw new Error(`No se pudo cargar: ${u}`); return r.text(); }
+  async function fetchJSON(u){ const r = await fetch(u, {cache:'no-store'}); if(!r.ok) throw new Error(`No se pudo cargar: ${u}`); return r.json(); }
+
+  function samePath(a,b){
+    const na = decodeURIComponent(a||'').replace(/^\.\/+/, '').replace(/^\/+/, '');
+    const nb = decodeURIComponent(b||'').replace(/^\.\/+/, '').replace(/^\/+/, '');
+    return na === nb;
+  }
+
+  function getMetaFromHTML(html, src){
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    const getText = id => (div.querySelector(`#${id}`)?.textContent || '').trim();
+
+    let fecha = getText('fecha');
+    if(!fecha && src){
+      const fn = src.split('/').pop() || '';
+      const m = fn.match(/^(\d{4}-\d{2}-\d{2})__/);
+      if (m) fecha = m[1];
+    }
+
+    const content =
+      div.querySelector('#editor')?.innerHTML ||
+      div.querySelector('.box')?.innerHTML    ||
+      div.querySelector('main')?.innerHTML    ||
+      div.querySelector('body')?.innerHTML    || '';
+
+    return {
+      libro:    getText('libro'),
+      capitulo: getText('capitulo'),
+      titulo:   getText('titulo'),
+      fecha,
+      content
+    };
+  }
+
+  function $(sel){ return document.querySelector(sel); }
+
+  async function render({ src, dataPath = '../data/libros.json' }){
+    const html = await fetchText(src);
+    const meta = getMetaFromHTML(html, src);
+
+    $('#h2libro').textContent = meta.libro || '—';
+    $('#h4titulo').textContent = meta.titulo || '';
+    $('#h3detalle').textContent =
+      `capítulo ${meta.capitulo||''}, ${meta.titulo||''}, ${fmtFechaBonita(meta.fecha||'')}`
+        .replace(/\s+,/g, ',').trim();
+    $('#capBody').innerHTML = meta.content;
+
+    const lista = await fetchJSON(dataPath);
+    const idx = lista.findIndex(it => samePath(it.path, src));
+    const prev = (idx > 0) ? lista[idx-1] : null;
+    const next = (idx >= 0 && idx < lista.length-1) ? lista[idx+1] : null;
+
+    const nav = document.getElementById('navRight');
+    if (nav) {
+      nav.innerHTML = '';
+      if (prev){
+        const a=document.createElement('a');
+        a.className='btn-prev';
+        a.href=`./capitulo.html?src=${encodeURIComponent(prev.path)}`;
+        a.textContent='anterior capítulo';
+        nav.appendChild(a);
+      }
+      if (next){
+        if (prev) nav.appendChild(document.createTextNode(' '));
+        const a=document.createElement('a');
+        a.className='btn-next';
+        a.href=`./capitulo.html?src=${encodeURIComponent(next.path)}`;
+        a.textContent='siguiente capítulo';
+        nav.appendChild(a);
+      }
+    }
+  }
+
+  async function init(){
+    const qs = new URLSearchParams(location.search);
+    const rawSrc = qs.get('src') || '';
+    const src = decodeURIComponent(rawSrc).replace(/^\.\/+/, '').replace(/^\/+/, './');
+
+    if (!src){
+      const body = document.getElementById('capBody') || document.body;
+      body.textContent = 'Capítulo no encontrado.';
+      return;
+    }
+
+    try{
+      await render({ src });
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }catch(e){
+      console.error(e);
+      const body = document.getElementById('capBody') || document.body;
+      body.textContent = 'Error cargando el capítulo.';
+    }
+  }
+
+  global.LectorCore = { init };
 })(window);
