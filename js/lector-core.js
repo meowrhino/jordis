@@ -8,11 +8,46 @@
     return res.json();
   }
 
+  // Resolve a data path regardless of whether the current page is served from / or /htmls/
+  function resolveDataPath(p){
+    const rel = (p||'').replace(/^\/+/, ''); // strip leading slashes
+    const underHtmls = location.pathname.includes('/htmls/');
+    return (underHtmls ? '../' : './') + rel;
+  }
+
+  async function fetchText(u){
+    const r = await fetch(u, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`Error ${r.status} al cargar ${u}`);
+    return r.text();
+  }
+
+function extractContentFromHTML(html){
+  // Use a real HTML parser so <html>/<body> are preserved reliably
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const pick = (sel) => doc.querySelector(sel)?.innerHTML;
+  return (
+    pick('#editor') ||
+    pick('.box') ||
+    pick('main') ||
+    (doc.body ? doc.body.innerHTML : '') ||
+    ''
+  );
+}
+
+  const _meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function fmtFechaBonita(yyyy_mm_dd){
+    const m = (yyyy_mm_dd||'').match(/(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return (yyyy_mm_dd||'').trim();
+    return `${parseInt(m[3],10)} de ${_meses[parseInt(m[2],10)-1]}`;
+  }
+
   // Render por defecto: <li><a href="...">fecha [hora] — título</a></li>
   function defaultRenderItem(item) {
     const li = document.createElement('li');
     const a = document.createElement('a');
-    a.href = item.path || item.file || '#';
+    const p = item.path || item.file || '#';
+    a.href = p ? resolveDataPath(p) : '#';
     a.textContent = [
       item.date || '',
       item.time ? item.time : '',
@@ -24,27 +59,27 @@
 
   // Opcional: render “bonito” para pensamientos si es audio
   function isAudio(item) {
-    return /\.(mp3|m4a|ogg|wav)$/i.test(item.path || item.file || '');
+    return /\.(mp3|m4a|ogg|wav|opus)$/i.test(item.path || item.file || '');
   }
   function pensamientosRenderItem(item) {
     const li = document.createElement('li');
-    const a = document.createElement('a');
-    a.href = item.path || item.file || '#';
-    a.target = '_blank';
+    const p = item.path || item.file || '';
+    const href = p ? resolveDataPath(p) : '#';
 
     if (isAudio(item)) {
-      // Audio (WhatsApp u otros) — muestra player + título
       const wrap = document.createElement('div');
       const title = document.createElement('div');
       title.textContent = `${item.date || ''} ${item.time || ''} — audio`;
       const audio = document.createElement('audio');
       audio.controls = true;
-      audio.src = a.href;
+      audio.src = href;
       wrap.appendChild(title);
       wrap.appendChild(audio);
       li.appendChild(wrap);
     } else {
-      // Texto (html)
+      const a = document.createElement('a');
+      a.href = href || '#';
+      a.target = '_blank';
       a.textContent = [
         item.date || '',
         item.time ? item.time : '',
@@ -53,6 +88,29 @@
       li.appendChild(a);
     }
     return li;
+  }
+
+  function diarioRenderItem(item){
+    const wrap = document.createElement('div');
+    wrap.className = 'diario-entrada';
+
+    const h4 = document.createElement('h4');
+    const bonito = fmtFechaBonita(item.date || '');
+    h4.textContent = `${item.place || ''}, ${bonito}`.replace(/^,\s*/, '').trim();
+
+    const body = document.createElement('div');
+    body.className = 'diario-contenido';
+    body.textContent = 'cargando…';
+
+    const url = resolveDataPath(item.path || '');
+    fetchText(url).then(html => {
+      const inner = extractContentFromHTML(html);
+      body.innerHTML = inner || '(vacío)';
+    }).catch(() => { body.textContent = '(no se pudo cargar)'; });
+
+    wrap.appendChild(h4);
+    wrap.appendChild(body);
+    return wrap;
   }
 
   async function init(opts) {
@@ -114,7 +172,9 @@
 
       const renderer =
         renderItem ||
-        (categoria === 'pensamientos' ? pensamientosRenderItem : defaultRenderItem);
+        (categoria === 'pensamientos' ? pensamientosRenderItem :
+         categoria === 'diario' ? diarioRenderItem :
+         defaultRenderItem);
 
       const frag = document.createDocumentFragment();
       for (const item of items) {
