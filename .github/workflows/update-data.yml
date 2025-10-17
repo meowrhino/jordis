@@ -1,0 +1,41 @@
+name: Update data indices (nightly)
+
+on:
+  schedule:
+    - cron: "0 23 * * *"  # 23:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install (optional)
+        run: |
+          if [ -f package.json ]; then npm ci; fi
+
+      - name: Build indices
+        run: |
+          npm run build:indices || node scripts/build-indices.js
+
+      - name: Commit & push if changed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore(data): nightly indices update"
+            git push
+          else
+            echo "No changes."
+          fi
