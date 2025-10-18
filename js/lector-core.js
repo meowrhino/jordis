@@ -113,6 +113,19 @@ function extractContentFromHTML(html){
     return wrap;
   }
 
+  function librosRenderItem(item){
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = `./capitulo.html?src=${encodeURIComponent(item.path || '')}`;
+    const h3 = document.createElement('h3');
+    const left = [ item.libro || '', item.capitulo || '' ].filter(Boolean).join(' ').trim();
+    const label = [ left, item.titulo || '' ].filter(Boolean).join(', ');
+    h3.textContent = label || ((item.path||'').split('/').pop() || 'capítulo');
+    a.appendChild(h3);
+    li.appendChild(a);
+    return li;
+  }
+
   async function init(opts) {
     const {
       root = document,
@@ -174,6 +187,7 @@ function extractContentFromHTML(html){
         renderItem ||
         (categoria === 'pensamientos' ? pensamientosRenderItem :
          categoria === 'diario' ? diarioRenderItem :
+         categoria === 'libros' ? librosRenderItem :
          defaultRenderItem);
 
       const frag = document.createDocumentFragment();
@@ -207,6 +221,12 @@ function extractContentFromHTML(html){
 
   async function fetchText(u){ const r = await fetch(u, {cache:'no-store'}); if(!r.ok) throw new Error(`No se pudo cargar: ${u}`); return r.text(); }
   async function fetchJSON(u){ const r = await fetch(u, {cache:'no-store'}); if(!r.ok) throw new Error(`No se pudo cargar: ${u}`); return r.json(); }
+
+  function resolveDataPath(p){
+    const rel = (p||'').replace(/^\/+/, '');
+    const underHtmls = location.pathname.includes('/htmls/');
+    return (underHtmls ? '../' : './') + rel;
+  }
 
   function samePath(a,b){
     const na = decodeURIComponent(a||'').replace(/^\.\/+/, '').replace(/^\/+/, '');
@@ -244,7 +264,7 @@ function extractContentFromHTML(html){
   function $(sel){ return document.querySelector(sel); }
 
   async function render({ src, dataPath = '../data/libros.json' }){
-    const html = await fetchText(src);
+    const html = await fetchText(resolveDataPath(src));
     const meta = getMetaFromHTML(html, src);
 
     $('#h2libro').textContent = meta.libro || '—';
@@ -255,9 +275,16 @@ function extractContentFromHTML(html){
     $('#capBody').innerHTML = meta.content;
 
     const lista = await fetchJSON(dataPath);
-    const idx = lista.findIndex(it => samePath(it.path, src));
-    const prev = (idx > 0) ? lista[idx-1] : null;
-    const next = (idx >= 0 && idx < lista.length-1) ? lista[idx+1] : null;
+    const me = lista.find(it => samePath(it.path, src));
+    let prev = null, next = null;
+    if (me && (me.prev || me.next)) {
+      prev = me.prev ? { path: me.prev } : null;
+      next = me.next ? { path: me.next } : null;
+    } else {
+      const idx = lista.findIndex(it => samePath(it.path, src));
+      if (idx > 0) prev = lista[idx-1];
+      if (idx >= 0 && idx < lista.length-1) next = lista[idx+1];
+    }
 
     const nav = document.getElementById('navRight');
     if (nav) {

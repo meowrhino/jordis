@@ -85,6 +85,17 @@ async function buildForCategory(cat) {
         const parts = base.split('_'); // ej: funcionaria_2_2025-11-04-21-16
         item.libro = parts[0] || '';
         item.capitulo = parts[1] || '';
+
+        // Leer el HTML y extraer el primer <h3> como título del capítulo
+        try {
+          const full = path.join(dir, e.name);
+          const html = await fs.promises.readFile(full, 'utf8');
+          const m = html.match(/<h3[^>]*>([\s\S]*?)<\/h3>/i);
+          if (m) {
+            const raw = m[1].replace(/<[^>]+>/g, '');
+            item.titulo = raw.trim();
+          }
+        } catch {}
       }
     } else if (AUDIO_EXT.includes(ext)) {
       // pensamientos → audio
@@ -102,6 +113,26 @@ async function buildForCategory(cat) {
     const bKey = b.date ? `${b.date}__${(b.time||'00:00:00').replace(/:/g,'-')}` : b.path || '';
     return aKey < bKey ? 1 : -1; // nuevo → antiguo
   });
+
+  // Si es LIBROS, añadir prev/next por cada serie (libro)
+  if (cat === 'libros') {
+    const byBook = new Map();
+    for (const it of out) {
+      const key = (it.libro || '').toLowerCase();
+      if (!byBook.has(key)) byBook.set(key, []);
+      byBook.get(key).push(it);
+    }
+    for (const group of byBook.values()) {
+      for (let i = 0; i < group.length; i++) {
+        const curr = group[i];
+        const prev = group[i - 1];
+        const next = group[i + 1];
+        curr.prev = prev ? prev.path : '';
+        curr.next = next ? next.path : '';
+      }
+    }
+  }
+
   return out;
 }
 

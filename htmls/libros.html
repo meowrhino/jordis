@@ -8,29 +8,21 @@
   <link rel="stylesheet" href="../style.css" />
 </head>
 <body>
-  <h1>libros</h1>
-  <nav class="menu nav-left" aria-label="Secciones">
-    <a href="../index.html">casa</a>
-  </nav>
-
-  <ul id="lista"></ul>
+  <main class="diario-grid">
+    <div class="diario-left">
+      <h1>libros</h1>
+      <nav class="menu nav-left" aria-label="Secciones">
+        <a href="../index.html">casa</a>
+      </nav>
+    </div>
+    <div class="diario-right">
+      <ul id="lista" class="libros-list"></ul>
+    </div>
+  </main>
   <script src="../js/lector-core.js"></script>
   <script>
-    // Igual que pensamientos: usamos el visualizador con un renderer simple
-    function renderLibroItem(item){
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = `./capitulo.html?src=${encodeURIComponent(item.path)}`;
-      // Mostrar como h4 para coherencia con el diseño de items
-      const h4 = document.createElement('h4');
-      h4.textContent = (item.title || `${item.libro ?? ''} ${item.numero ? (item.numero+':') : ''} ${item.tituloCap ?? ''}`).trim();
-      a.appendChild(h4);
-      li.appendChild(a);
-      return li;
-    }
     VisualizadorCore.init({
       categoria: 'libros',
-      renderItem: renderLibroItem,
       containerSel: '#lista',
       emptyText: 'Sin capítulos todavía.'
     });
