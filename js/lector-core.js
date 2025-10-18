@@ -113,6 +113,29 @@ function extractContentFromHTML(html){
     return wrap;
   }
 
+  function extrasRenderItem(item){
+    const wrap = document.createElement('div');
+    wrap.className = 'extras-item';
+
+    const h3 = document.createElement('h3');
+    const bonito = fmtFechaBonita(item.date || '');
+    h3.textContent = bonito || 'extra';
+
+    const body = document.createElement('div');
+    body.className = 'extras-contenido';
+    body.textContent = 'cargando…';
+
+    const url = resolveDataPath(item.path || '');
+    fetchText(url).then(html => {
+      const inner = extractContentFromHTML(html);
+      body.innerHTML = inner || '(vacío)';
+    }).catch(() => { body.textContent = '(no se pudo cargar)'; });
+
+    wrap.appendChild(h3);
+    wrap.appendChild(body);
+    return wrap;
+  }
+
   function librosRenderItem(item){
     const li = document.createElement('li');
     const a = document.createElement('a');
@@ -188,6 +211,7 @@ function extractContentFromHTML(html){
         (categoria === 'pensamientos' ? pensamientosRenderItem :
          categoria === 'diario' ? diarioRenderItem :
          categoria === 'libros' ? librosRenderItem :
+         categoria === 'extras' ? extrasRenderItem :
          defaultRenderItem);
 
       const frag = document.createDocumentFragment();

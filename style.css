@@ -407,7 +407,7 @@ u {
 }
 
 /* Diario: en desktop solo scrollea la columna derecha */
-@media (min-width: 481px) {
+@media (min-width: 641px) {
   .diario-grid {
     grid-template-columns: 45% 55%;
     height: 100dvh;
@@ -425,7 +425,7 @@ u {
 
 /* Diario: responsive hasta 480px. Top 20dvh (título), lista 70dvh (scroll),
    queda ~10dvh libre para el botón fijo sin solapar. */
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .diario-grid {
     grid-template-columns: 1fr;
     grid-template-rows: 25dvh 62dvh; /* 20% arriba, 70% lista */
@@ -458,6 +458,40 @@ u {
 
 @media (max-width: 480px) {
   .libros-list li { margin: clamp(20px, 5vw, 44px) 0; }
+}
+
+/* === Page: Extras (viewer) === */
+.page-extras .extras-main{
+  padding: var(--nav-offset); /* alinea con botón 'casa' */
+}
+.page-extras .extras-list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.page-extras .extras-item{
+  margin: clamp(16px, 3vw, 36px) 0;
+}
+.page-extras .extras-item h3{
+  margin: 0 0 0.6em 0;
+  font-weight: 400;
+  font-size: clamp(28px, 3.4vw, 42px);
+}
+/* Desktop: columna con scroll si es larga */
+@media (min-width: 481px){
+  .page-extras .extras-main{
+    min-height: 100dvh;
+    overflow: auto;
+    padding-bottom: 0;
+  }
+}
+/* Móvil: altura como diario (62dvh) para no tapar la nav fija */
+@media (max-width: 480px){
+  .page-extras .extras-main{
+    max-height: 62dvh;
+    overflow: auto;
+    padding-bottom: 0;
+  }
 }
 
 /* === Page: Capítulo (viewer) === */
