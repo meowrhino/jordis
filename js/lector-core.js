@@ -94,9 +94,9 @@ function extractContentFromHTML(html){
     const wrap = document.createElement('div');
     wrap.className = 'diario-entrada';
 
-    const h4 = document.createElement('h4');
+    const h3 = document.createElement('h3');
     const bonito = fmtFechaBonita(item.date || '');
-    h4.textContent = `${item.place || ''}, ${bonito}`.replace(/^,\s*/, '').trim();
+    h3.textContent = `${item.place || ''}, ${bonito}`.replace(/^,\s*/, '').trim();
 
     const body = document.createElement('div');
     body.className = 'diario-contenido';
@@ -108,7 +108,7 @@ function extractContentFromHTML(html){
       body.innerHTML = inner || '(vacío)';
     }).catch(() => { body.textContent = '(no se pudo cargar)'; });
 
-    wrap.appendChild(h4);
+    wrap.appendChild(h3);
     wrap.appendChild(body);
     return wrap;
   }

@@ -355,3 +355,60 @@ u {
   min-width: 6ch;
   text-align: center;
 }
+
+
+/* === Page: Diario (viewer) === */
+.diario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* gap: clamp(12px, 4vw, 48px); */
+  align-items: start;
+  min-height: 100dvh;
+}
+
+.diario-left {
+  padding: clamp(8px, 2vw, 16px);
+}
+
+.diario-right {
+  padding: clamp(8px, 2vw, 16px);
+}
+
+.diario-entrada {
+  margin: clamp(16px, 3vw, 36px) 0;
+}
+
+.diario-entrada h3 {
+  margin: 0 0 .6em 0;
+  font-weight: 400;
+  font-size: clamp(28px, 3.4vw, 42px);
+}
+
+/* Diario: en desktop solo scrollea la columna derecha */
+@media (min-width: 481px) {
+  .diario-grid { height: 100dvh; overflow: hidden; }
+  .diario-left { overflow: hidden; }
+  .diario-right { max-height: 100dvh; overflow: auto; padding-bottom: 0; }
+}
+
+/* Diario: responsive hasta 480px. Top 20dvh (título), lista 70dvh (scroll),
+   queda ~10dvh libre para el botón fijo sin solapar. */
+@media (max-width: 480px) {
+  .diario-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 25dvh 60dvh; /* 20% arriba, 70% lista */
+    height: 100dvh; /* reserva el 10% restante */
+  }
+  .diario-left {
+    min-height: 25dvh;
+    overflow: hidden;
+  }
+  .diario-right {
+    max-height: 60dvh;
+    overflow: auto; /* scroll interno para las entradas */
+    padding-bottom: 0; /* ya reservamos hueco con el 10% libre */
+  }
+  .diario-entrada {
+    margin: clamp(20px, 5vw, 44px) 0;
+  }
+}
