@@ -1,0 +1,106 @@
+tranqui, ahora te gustaria darle a captiulo? será más tirando a las paginas de editores a nivel "visual" que tendra el boton de casa, el titulo de antes en un h2 centrado, luego en meta la fecha centrada y no editable y luego el contenido con un max width  y que sea tan grande como necesite (la pagina se scrollea toda) y abajo de todo en el nav-left "casa" y  "libros" y en el nav right "anterior capitulo" y/o "sigueinte capítulo" (o ninguno, en caso que ambos prev y next esten vacios :O  
+
+sí! vamos a dejar capítulo con el look “editor” que describiste (h2 centrado, fecha centrada, contenido ancho cómodo, y navs abajo). Te dejo 3 cambios muy claros para aplicar ahora mismo:
+
+⸻
+
+1) htmls/capitulo.html
+
+Sustituye el archivo completo por este (sin CSS inline, usando el global):
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Island+Moments&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <title>capítulo</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body class="page-capitulo">
+  <main class="capitulo-main">
+    <h2 id="capTitulo" class="cap-h2"></h2>
+
+    <div class="meta">
+      <div class="meta-row">
+        <span id="capFecha" class="ph" role="text"></span>
+      </div>
+    </div>
+
+    <article class="cap-body" id="capBody"></article>
+  </main>
+
+  <!-- navs fijos al fondo (estilo global) -->
+  <nav class="menu nav-left">
+    <a href="../index.html">casa</a>
+    <a href="./libros.html">libros</a>
+  </nav>
+  <nav class="menu nav-right" id="navRight"></nav>
+
+  <script src="../js/lector-core.js"></script>
+  <script>LectorCore.init();</script>
+</body>
+</html>
+
+2) style.css
+
+Añade al final esta sección (estilo página capítulo):
+
+/* === Page: Capítulo (viewer) === */
+.page-capitulo .capitulo-main{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+  padding: clamp(16px, 4vw, 48px);
+}
+
+.page-capitulo h2{
+  text-align: center;
+  margin: 0;
+}
+
+.page-capitulo .meta{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page-capitulo .cap-body{
+  width: min(92vw, 76ch);
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+
+Usa la misma tipografía y navs que el resto; la página completa scrollea, no hay grid especial aquí.)
+
+⸻
+
+3) js/lector-core.js
+
+Dentro del segundo IIFE (el de LectorCore), en la función render(...) sustituye el bloque donde pintábamos los encabezados:
+
+-  $('#h2libro').textContent = meta.libro || '—';
+-  $('#h4titulo').textContent = meta.titulo || '';
+-  $('#h3detalle').textContent =
+-    `capítulo ${meta.capitulo||''}, ${meta.titulo||''}, ${fmtFechaBonita(meta.fecha||'')}`
+-      .replace(/\s+,/g, ',').trim();
++  // h2 centrado con el título del capítulo
++  $('#capTitulo').textContent =
++    (meta.titulo || `${meta.libro||''} ${meta.capitulo||''}`.trim() || '—');
++  // meta: fecha centrada (formato bonito)
++  $('#capFecha').textContent = fmtFechaBonita(meta.fecha || '');
+
+no toques el resto: #capBody sigue igual y los botones prev/next ya usan prev/next del JSON si están disponibles).
+
+⸻
+
+Cómo probar
+	1.	Guarda los cambios y recarga un capítulo: htmls/capitulo.html?src=data/libros/loqueSea.html
+	2.	Deberías ver:
+	•	H2 centrado con el título de capítulo.
+	•	Fecha centrada debajo (no editable).
+	•	Contenido con ancho máx. (~76ch), la página scrollea entera.
+	•	Abajo: nav-left con “casa” y “libros”, y nav-right con “anterior/siguiente” si aplican.

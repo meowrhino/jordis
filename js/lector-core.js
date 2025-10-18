@@ -235,30 +235,54 @@ function extractContentFromHTML(html){
   }
 
   function getMetaFromHTML(html, src){
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    const getText = id => (div.querySelector(`#${id}`)?.textContent || '').trim();
+    // Parse robustly with DOMParser to avoid losing <body> content
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
 
-    let fecha = getText('fecha');
-    if(!fecha && src){
+    // helpers
+    const pickHTML = (sel) => doc.querySelector(sel)?.innerHTML || '';
+    const pickText = (sel) => (doc.querySelector(sel)?.textContent || '').trim();
+
+    // TITLE candidates (first match wins)
+    const titulo =
+      // explicit ids/data-attrs used by our editors
+      pickText('#titulo') ||
+      pickText('[data-titulo]') ||
+      // common headings
+      pickText('h1') ||
+      // meta/title fallbacks
+      (doc.querySelector('meta[name="titulo"]')?.getAttribute('content') || '').trim() ||
+      (doc.querySelector('title')?.textContent || '').trim();
+
+    // LIBRO / CAPITULO labels (optional)
+    const libro =
+      pickText('#libro') ||
+      pickText('[data-libro]');
+
+    const capitulo =
+      pickText('#capitulo') ||
+      pickText('[data-capitulo]');
+
+    // FECHA: prefer DOM, else derive from filename
+    let fecha = pickText('#fecha') || pickText('[data-fecha]');
+    if (!fecha && src){
       const fn = src.split('/').pop() || '';
-      const m = fn.match(/^(\d{4}-\d{2}-\d{2})__/);
+      // Extract YYYY-MM-DD optionally followed by -HH-MM(-SS)
+      const m = fn.match(/(\d{4}-\d{2}-\d{2})(?:[-_]\d{2}-\d{2}(?:-\d{2})?)?/);
       if (m) fecha = m[1];
     }
 
+    // CONTENT candidates in priority order
     const content =
-      div.querySelector('#editor')?.innerHTML ||
-      div.querySelector('.box')?.innerHTML    ||
-      div.querySelector('main')?.innerHTML    ||
-      div.querySelector('body')?.innerHTML    || '';
+      pickHTML('#editor') ||
+      pickHTML('.box') ||
+      pickHTML('article.cap-body') ||
+      pickHTML('main') ||
+      // finally, take the body innerHTML (safe because we parsed via DOMParser)
+      (doc.body ? doc.body.innerHTML : '') ||
+      '';
 
-    return {
-      libro:    getText('libro'),
-      capitulo: getText('capitulo'),
-      titulo:   getText('titulo'),
-      fecha,
-      content
-    };
+    return { libro, capitulo, titulo, fecha, content };
   }
 
   function $(sel){ return document.querySelector(sel); }
@@ -267,15 +291,40 @@ function extractContentFromHTML(html){
     const html = await fetchText(resolveDataPath(src));
     const meta = getMetaFromHTML(html, src);
 
-    $('#h2libro').textContent = meta.libro || '—';
-    $('#h4titulo').textContent = meta.titulo || '';
-    $('#h3detalle').textContent =
-      `capítulo ${meta.capitulo||''}, ${meta.titulo||''}, ${fmtFechaBonita(meta.fecha||'')}`
-        .replace(/\s+,/g, ',').trim();
-    $('#capBody').innerHTML = meta.content;
-
+    // Cargar índice de libros para enriquecer título y navegación (solo lectura)
     const lista = await fetchJSON(dataPath);
     const me = lista.find(it => samePath(it.path, src));
+
+    // Derivar campos finales preferentemente desde libros.json
+    const libroName = (me?.libro || meta.libro || '').trim();
+    const capNum    = (me?.capitulo || meta.capitulo || '').trim();
+    const tituloCap = (me?.titulo || meta.titulo || '').trim();
+
+    // Encabezado: "[libro], [capitulo]" si existen; si no, usar título o guion
+    let capTitle = '';
+    if (libroName || capNum) {
+      capTitle = [libroName, capNum].filter(Boolean).join(', ');
+    } else {
+      capTitle = tituloCap || '—';
+    }
+    $('#capTitulo').textContent = capTitle;
+
+    // Actualizar <title> del documento
+    if (tituloCap || libroName) {
+      document.title = libroName ? `${libroName} · ${tituloCap || (capNum ? ('cap. ' + capNum) : '')}` : `${tituloCap} — capítulo`;
+    }
+
+    // Cuerpo del capítulo
+    $('#capBody').innerHTML = meta.content || '';
+
+    // Ocultar fecha visual y contenedor meta
+    const fechaEl = $('#capFecha');
+    if (fechaEl) {
+      fechaEl.textContent = '';
+      const metaBox = fechaEl.closest('.meta');
+      if (metaBox) metaBox.style.display = 'none';
+    }
+
     let prev = null, next = null;
     if (me && (me.prev || me.next)) {
       prev = me.prev ? { path: me.prev } : null;

@@ -459,3 +459,41 @@ u {
 @media (max-width: 480px) {
   .libros-list li { margin: clamp(20px, 5vw, 44px) 0; }
 }
+
+/* === Page: Capítulo (viewer) === */
+.page-capitulo .capitulo-main{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+  padding: clamp(16px, 4vw, 48px);
+}
+
+
+/* Capítulo: título principal */
+.page-capitulo h1{
+  /* usa el h1 estándar de la web, solo añadimos un respiro inferior */
+  padding-bottom: calc(var(--h1-gap-y) * 0.5);
+}
+
+.page-capitulo .meta{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page-capitulo .cap-body{
+  width: min(92vw, 76ch);
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Capítulo: tipografía del contenido */
+.page-capitulo .cap-body h3{
+  margin: 0 0 0.6em 0;
+  font-weight: 400;
+  font-size: clamp(28px, 3.4vw, 42px); /* igual que en listado de libros */
+}
+
+/* Capítulo: ocultar fecha visual */
+.page-capitulo #capFecha{ display:none; }
