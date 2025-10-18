@@ -25,7 +25,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   background: var(--color-bg);
@@ -44,7 +45,12 @@ body {
 }
 
 /* === Headings (with home-specific rule) === */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: "Island Moments", cursive;
   font-weight: 400;
   line-height: 0.9;
@@ -156,8 +162,13 @@ u {
 }
 
 /* === Placeholders (visuales, sin texto real en el DOM) === */
-.ph:empty::before { content: attr(data-placeholder); opacity: .5; }
-.ph:not(:empty) { min-width: 0; }
+.ph:empty::before {
+  content: attr(data-placeholder);
+  opacity: 0.5;
+}
+.ph:not(:empty) {
+  min-width: 0;
+}
 
 #lugar.ph[contenteditable="true"] {
   cursor: text;
@@ -167,7 +178,9 @@ u {
   cursor: pointer;
 }
 /* Cualquier placeholder con role=button debe mostrar cursor de botón */
-.ph[role="button"] { cursor: pointer; }
+.ph[role="button"] {
+  cursor: pointer;
+}
 
 .box {
   width: min(80vw, 720px);
@@ -183,7 +196,8 @@ u {
   height: 100%;
   outline: none;
   background: transparent;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+    "Noto Sans", Arial, sans-serif;
   font-size: clamp(16px, 1.25vw, 20px);
   line-height: 1.4;
   overflow: auto;
@@ -193,7 +207,8 @@ u {
   content: "(texto)";
   color: #fff;
   font-style: normal;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, sans-serif;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
+    "Noto Sans", Arial, sans-serif;
 }
 
 .toolbar {
@@ -234,7 +249,7 @@ u {
 
 /* === Paleta de colores (texto destacado) === */
 .c-amarillo {
-  color: #F7C873;
+  color: #f7c873;
 }
 
 .c-verde {
@@ -293,14 +308,15 @@ u {
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
 
 /* === Animations === */
 @keyframes blinkSoft {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -337,12 +353,19 @@ u {
   align-items: baseline;
   justify-content: center;
 }
-.meta-row .ph { min-width: 6ch; }
+.meta-row .ph {
+  min-width: 6ch;
+}
 
 /* Cada item de la meta ocupa solo su contenido */
-.meta > * { flex: 0 0 auto; min-width: 0; }
+.meta > * {
+  flex: 0 0 auto;
+  min-width: 0;
+}
 /* La hora no fuerza ancho mínimo */
-#hora { min-width: 0; }
+#hora {
+  min-width: 0;
+}
 
 .ph {
   font-family: "Island Moments", cursive;
@@ -355,7 +378,6 @@ u {
   min-width: 6ch;
   text-align: center;
 }
-
 
 /* === Page: Diario (viewer) === */
 .diario-grid {
@@ -371,7 +393,7 @@ u {
 }
 
 .diario-right {
-  padding: clamp(8px, 2vw, 16px);
+  padding: var(--nav-offset);
 }
 
 .diario-entrada {
@@ -379,16 +401,26 @@ u {
 }
 
 .diario-entrada h3 {
-  margin: 0 0 .6em 0;
+  margin: 0 0 0.6em 0;
   font-weight: 400;
   font-size: clamp(28px, 3.4vw, 42px);
 }
 
 /* Diario: en desktop solo scrollea la columna derecha */
 @media (min-width: 481px) {
-  .diario-grid { height: 100dvh; overflow: hidden; }
-  .diario-left { overflow: hidden; }
-  .diario-right { max-height: 100dvh; overflow: auto; padding-bottom: 0; }
+  .diario-grid {
+    grid-template-columns: 45% 55%;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .diario-left {
+    overflow: hidden;
+  }
+  .diario-right {
+    max-height: 100dvh;
+    overflow: auto;
+    padding-bottom: 0;
+  }
 }
 
 /* Diario: responsive hasta 480px. Top 20dvh (título), lista 70dvh (scroll),
@@ -396,7 +428,7 @@ u {
 @media (max-width: 480px) {
   .diario-grid {
     grid-template-columns: 1fr;
-    grid-template-rows: 25dvh 60dvh; /* 20% arriba, 70% lista */
+    grid-template-rows: 25dvh 62dvh; /* 20% arriba, 70% lista */
     height: 100dvh; /* reserva el 10% restante */
   }
   .diario-left {
@@ -404,7 +436,7 @@ u {
     overflow: hidden;
   }
   .diario-right {
-    max-height: 60dvh;
+    max-height: 62dvh;
     overflow: auto; /* scroll interno para las entradas */
     padding-bottom: 0; /* ya reservamos hueco con el 10% libre */
   }
