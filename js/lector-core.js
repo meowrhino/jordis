@@ -287,6 +287,37 @@ function extractContentFromHTML(html){
 
   function $(sel){ return document.querySelector(sel); }
 
+  // ---- helpers: orden de capítulos (ascendente) ----
+  function _capNumValue(v){
+    if (v == null) return null;
+    const n = parseInt(String(v).replace(/[^\d-]/g, ''), 10);
+    return Number.isNaN(n) ? null : n;
+  }
+  function _chapterKey(it){
+    // 1) preferir número de capítulo si es numérico
+    const n = _capNumValue(it.capitulo);
+    if (n !== null) return { t:'num', v:n };
+    // 2) intentar fecha en el path: YYYY-MM-DD(-HH-MM-SS opcional)
+    const m = (it.path || '').match(/(\d{4})-(\d{2})-(\d{2})(?:[-_](\d{2})-(\d{2})(?:-(\d{2}))?)?/);
+    if (m){
+      const h = m[4] || '00', mi = m[5] || '00', s = m[6] || '00';
+      const ts = Date.parse(`${m[1]}-${m[2]}-${m[3]}T${h}:${mi}:${s}Z`);
+      if (!Number.isNaN(ts)) return { t:'date', v: ts };
+    }
+    // 3) fallback: string del path
+    return { t:'str', v: (it.path || '') };
+  }
+  function _compareChaptersAsc(a,b){
+    const ka = _chapterKey(a), kb = _chapterKey(b);
+    if (ka.t === kb.t){
+      if (ka.v < kb.v) return -1;
+      if (ka.v > kb.v) return 1;
+      return 0;
+    }
+    const prio = { num:0, date:1, str:2 };
+    return (prio[ka.t] ?? 9) - (prio[kb.t] ?? 9);
+  }
+
   async function render({ src, dataPath = '../data/libros.json' }){
     const html = await fetchText(resolveDataPath(src));
     const meta = getMetaFromHTML(html, src);
@@ -325,14 +356,24 @@ function extractContentFromHTML(html){
       if (metaBox) metaBox.style.display = 'none';
     }
 
+    // Calcular prev/next SIEMPRE por orden dentro del mismo libro (ignorar explícitos del JSON)
     let prev = null, next = null;
-    if (me && (me.prev || me.next)) {
-      prev = me.prev ? { path: me.prev } : null;
-      next = me.next ? { path: me.next } : null;
-    } else {
-      const idx = lista.findIndex(it => samePath(it.path, src));
-      if (idx > 0) prev = lista[idx-1];
-      if (idx >= 0 && idx < lista.length-1) next = lista[idx+1];
+    if (me) {
+      // clave de libro robusta: me.libro || libroName || prefijo del filename antes del primer "_"
+      const libroKey =
+        (me.libro || '').trim() ||
+        (libroName || '').trim() ||
+        (((me.path || '').split('/').pop() || '').split('_')[0]);
+
+      const sameLibro = lista.filter(it => {
+        const k = (it.libro || '').trim() || (((it.path || '').split('/').pop() || '').split('_')[0]);
+        return k === libroKey;
+      });
+
+      const ordered = sameLibro.slice().sort(_compareChaptersAsc); // 1,2,3...
+      const idx2 = ordered.findIndex(it => samePath(it.path, src));
+      if (idx2 > 0) prev = ordered[idx2 - 1];
+      if (idx2 >= 0 && idx2 < ordered.length - 1) next = ordered[idx2 + 1];
     }
 
     const nav = document.getElementById('navRight');
