@@ -194,7 +194,7 @@ function extractContentFromHTML(html){
 
     const body = document.createElement('div');
     body.className = 'diario-contenido';
-    body.textContent = 'cargando…';
+    body.textContent = 'cargando...';
 
     const url = resolveDataPath(item.path || '');
     fetchText(url).then(html => {
@@ -217,7 +217,7 @@ function extractContentFromHTML(html){
 
     const body = document.createElement('div');
     body.className = 'extras-contenido';
-    body.textContent = 'cargando…';
+    body.textContent = 'cargando...';
 
     const url = resolveDataPath(item.path || '');
     fetchText(url).then(html => {
@@ -258,7 +258,7 @@ function extractContentFromHTML(html){
     const cont = $(root, containerSel);
     if (!cont) throw new Error(`visualizador-core: no existe container ${containerSel}`);
 
-    cont.innerHTML = `<li>${loadingText}</li>`;
+    cont.innerHTML = `<li>cargando...</li>`;
 
     try {
       // Intentar raíz del sitio y, si falla (404), intentar ../data para páginas dentro de /htmls
@@ -324,7 +324,8 @@ function extractContentFromHTML(html){
 
       cont.innerHTML = '';
       if (!items.length) {
-        cont.innerHTML = `<li>${emptyText}</li>`;
+        console.info(`visualizador-core: categoría "${categoria}" sin entradas (0 items).`);
+        cont.innerHTML = '';
         return;
       }
 
