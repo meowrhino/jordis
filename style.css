@@ -1,3 +1,59 @@
+/* ============================== 8) PAGES — Pensamientos (viewer) ======== */
+/* Reutiliza layout de extras: body.page-pensamientos usa mismos pads/scroll */
+body.page-pensamientos {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 87dvh;
+}
+
+.page-pensamientos .pens-main {
+  padding: var(--nav-offset);
+  padding-top: 0;
+  overflow: auto;
+  min-height: 0;
+  max-height: 72dvh;
+}
+
+@media (min-width: 800px) and (max-width: 999px) {
+  .page-pensamientos .pens-main { max-height: 55dvh; }
+}
+@media (min-width: 1000px) {
+  .page-pensamientos .pens-main { max-height: 50dvh; }
+}
+
+/* Estructura de mes/día */
+.pens-mes {
+  margin: clamp(16px, 3vw, 36px) 0;
+}
+.pens-mes h2 {
+  margin: 0 0 0.6em 0;
+  font-weight: 400;
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-family: "Island Moments", cursive;
+  line-height: 0.9;
+}
+
+.pens-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(8px, 2vw, 16px);
+  align-items: baseline;
+  margin-bottom: clamp(10px, 2vw, 18px);
+}
+
+.pens-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.6s ease-in-out;
+  white-space: nowrap;
+}
+
+.pens-link:hover,
+.pens-link:focus-visible {
+  color: #999;
+  animation: blinkSoft 1.4s ease-in-out infinite alternate;
+  outline: none;
+}
 /*
 =============================================================================
 JORDIS — style.css

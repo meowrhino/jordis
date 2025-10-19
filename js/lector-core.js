@@ -36,6 +36,30 @@ function extractContentFromHTML(html){
 }
 
   const _meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  function parseYMD(s){
+    // expects YYYY-MM-DD
+    const m = (s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m) return null;
+    return { y: +m[1], mo: +m[2], d: +m[3] };
+  }
+
+  function bonGreetingFromTime(t){
+    // t like "HH:MM:SS" or "HH:MM"
+    const m = (t||'').match(/^(\d{2}):(\d{2})(?::\d{2})?$/);
+    if(!m){ return 'bon dia'; }
+    const H = +m[1], Mi = +m[2];
+    const mins = H*60 + Mi;
+    // Ranges:
+    // bon dia:   05:00–11:59
+    // bon migdia:12:00–15:59
+    // bona tarda:16:00–19:59
+    // bona nit:  20:00–04:59
+    if (mins >= 5*60 && mins <= 11*60+59) return 'bon dia';
+    if (mins >= 12*60 && mins <= 15*60+59) return 'bon migdia';
+    if (mins >= 16*60 && mins <= 19*60+59) return 'bona tarda';
+    return 'bona nit';
+  }
   function fmtFechaBonita(yyyy_mm_dd){
     const m = (yyyy_mm_dd||'').match(/(\d{4})-(\d{2})-(\d{2})/);
     if (!m) return (yyyy_mm_dd||'').trim();
@@ -63,31 +87,101 @@ function extractContentFromHTML(html){
   }
   function pensamientosRenderItem(item) {
     const li = document.createElement('li');
+    const a = document.createElement('a');
     const p = item.path || item.file || '';
-    const href = p ? resolveDataPath(p) : '#';
-
-    if (isAudio(item)) {
-      const wrap = document.createElement('div');
-      const title = document.createElement('div');
-      title.textContent = `${item.date || ''} ${item.time || ''} — audio`;
-      const audio = document.createElement('audio');
-      audio.controls = true;
-      audio.src = href;
-      wrap.appendChild(title);
-      wrap.appendChild(audio);
-      li.appendChild(wrap);
-    } else {
-      const a = document.createElement('a');
-      a.href = href || '#';
-      a.target = '_blank';
-      a.textContent = [
-        item.date || '',
-        item.time ? item.time : '',
-        item.title ? `— ${item.title}` : ''
-      ].join(' ').replace(/\s+/g, ' ').trim();
-      li.appendChild(a);
-    }
+    a.href = p ? resolveDataPath(p) : '#';
+    a.textContent = `${item.date || ''} ${item.time || ''}`;
+    li.appendChild(a);
     return li;
+  }
+  function renderPensamientosGrouped(container, items){
+    // items: normalized with .path .date (YYYY-MM-DD) .time (HH:MM:SS)
+    // 1) group by month (YYYY-MM)
+    const byMonth = new Map(); // key "YYYY-MM" => { y, mo, days: Map('DD' => [items]) }
+    for (const it of items){
+      const ymd = parseYMD(it.date || '');
+      if (!ymd) continue;
+      const key = `${ymd.y}-${String(ymd.mo).padStart(2,'0')}`;
+      if (!byMonth.has(key)) {
+        byMonth.set(key, { y: ymd.y, mo: ymd.mo, days: new Map() });
+      }
+      const month = byMonth.get(key);
+      const dayKey = String(ymd.d).padStart(2,'0');
+      if (!month.days.has(dayKey)) month.days.set(dayKey, []);
+      month.days.get(dayKey).push(it);
+    }
+
+    // 2) order months DESC (newest month first)
+    const months = Array.from(byMonth.values()).sort((a,b)=>{
+      if (a.y !== b.y) return b.y - a.y;
+      return b.mo - a.mo;
+    });
+
+    // 3) build DOM
+    container.innerHTML = '';
+    const audio = document.createElement('audio'); // singleton audio controller
+    audio.preload = 'none';
+    audio.style.display = 'none';
+    container.appendChild(audio);
+
+    let currentHref = null;
+
+    function makeLink(it){
+      const a = document.createElement('a');
+      const href = resolveDataPath(it.path || '');
+      const d = parseYMD(it.date || '');
+      const greet = bonGreetingFromTime((it.time||'').slice(0,5));
+      const dayNum = d ? d.d : '';
+      a.href = href;
+      a.className = 'pens-link';
+      a.textContent = `${greet} ${dayNum} de ${_meses[(d?.mo||1)-1]}`;
+      a.addEventListener('click', (ev)=>{
+        ev.preventDefault();
+        if (currentHref !== href){
+          currentHref = href;
+          audio.src = href;
+          audio.currentTime = 0;
+          audio.play().catch(()=>{ /* ignore */ });
+        } else {
+          if (audio.paused) {
+            audio.play().catch(()=>{});
+          } else {
+            audio.pause();
+          }
+        }
+      });
+      return a;
+    }
+
+    for (const m of months){
+      // header: "mes, año"
+      const section = document.createElement('section');
+      section.className = 'pens-mes';
+
+      const h2 = document.createElement('h2');
+      h2.textContent = `${_meses[m.mo-1]}, ${m.y}`;
+      section.appendChild(h2);
+
+      // order days DESC (newest day first)
+      const days = Array.from(m.days.entries()).sort((a,b)=> parseInt(b[0],10) - parseInt(a[0],10));
+
+      for (const [dayKey, arr] of days){
+        // sort items for the day by time ASC (earliest -> latest)
+        arr.sort((a,b)=> (a.time||'') < (b.time||'') ? -1 : ((a.time||'') > (b.time||'') ? 1 : 0));
+
+        const row = document.createElement('div');
+        row.className = 'pens-row';
+
+        // Create links
+        for (const it of arr){
+          row.appendChild(makeLink(it));
+        }
+
+        section.appendChild(row);
+      }
+
+      container.appendChild(section);
+    }
   }
 
   function diarioRenderItem(item){
@@ -199,6 +293,34 @@ function extractContentFromHTML(html){
 
       // Orden: más nuevo primero. Si vienen con YYYY-MM-DD__HH-mm-ss en el nombre, basta con ordenar por path desc
       items.sort((a, b) => (a.path < b.path ? 1 : -1));
+
+      // Pensamientos: render agrupado por mes y día, con enlaces que reproducen audio
+      if (categoria === 'pensamientos' && !renderItem) {
+        // Normalizar fecha/hora si faltan
+        items = items.map(it => {
+          const p = { ...it };
+          // try to extract date/time from filename if missing
+          if (!p.date) {
+            const fn = (p.path||'').split('/').pop() || '';
+            const m = fn.match(/(\d{4}-\d{2}-\d{2}).*?(\d{2}\.\d{2}\.\d{2}|\d{2}:\d{2}:\d{2})/);
+            if (m){
+              p.date = m[1];
+              const t = m[2].replaceAll('.', ':');
+              p.time = t.length === 5 ? `${t}:00` : t;
+            }
+          }
+          if (p.time && /^\d{2}\.\d{2}\.\d{2}$/.test(p.time)) {
+            p.time = p.time.replaceAll('.', ':');
+          }
+          return p;
+        });
+        // Crear un contenedor DIV para usar el renderer agrupado
+        const parent = cont.parentElement;
+        // Si el container actual es UL/OL y usaba LIs, lo vaciamos y tratamos como un div genérico
+        cont.innerHTML = '';
+        renderPensamientosGrouped(cont, items);
+        return;
+      }
 
       cont.innerHTML = '';
       if (!items.length) {
