@@ -1,3 +1,23 @@
+/*
+=============================================================================
+JORDIS — style.css
+Table of contents (sections use the same headers):
+  1) GLOBAL TOKENS (colors, type scales, layout vars)
+  2) RESETS / BASE (box-sizing, html/body)
+  3) BASE TYPOGRAPHY (headings, links)
+  4) COMPONENTS (navigation, menu, buttons)
+  5) TEXT & PLACEHOLDERS (p, .ph, #editor, toolbars)
+  6) UTILITIES (a11y helpers)
+  7) ANIMATIONS
+  8) PAGES
+     8.1) Editor de diario (escribir)
+     8.2) Diario (viewer)
+     8.3) Libros (viewer)
+     8.4) Extras (viewer)
+     8.5) Capítulo (viewer)
+=============================================================================
+*/
+/* ============================== 1) GLOBAL TOKENS ========================= */
 :root {
   /* Colors */
   --color-text: #333;
@@ -33,7 +53,7 @@ body {
   color: var(--color-text);
 }
 
-/* === Base typography and layout === */
+/* ============================== 2) RESETS / BASE ========================= */
 body {
   font-family: "EB Garamond", serif;
   display: grid;
@@ -44,7 +64,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* === Headings (with home-specific rule) === */
+/* ============================== 3) BASE TYPOGRAPHY ======================= */
 h1,
 h2,
 h3,
@@ -69,6 +89,8 @@ h2 {
   max-width: var(--h1-max-desktop);
 }
 
+/* ------------------------------------------------------------------------- */
+
 .home h1 {
   padding-left: var(--h1-hanging-indent);
   text-indent: calc(-1 * var(--h1-hanging-indent));
@@ -88,7 +110,7 @@ h2 {
   outline: none;
 }
 
-/* === Navigation and menu === */
+/* ============================== 4) COMPONENTS: NAV & MENU ================ */
 .nav-right {
   position: fixed;
   right: var(--nav-offset);
@@ -122,6 +144,8 @@ h2 {
   transition: color 0.6s ease-in-out;
 }
 
+/* ------------------------------------------------------------------------- */
+
 .menu a:hover,
 .menu a:focus-visible {
   color: #999; /* gris clarito */
@@ -129,7 +153,8 @@ h2 {
   outline: none;
 }
 
-/* Botones editor con estilo navegación */
+/* ============================== COMPONENTS: BUTTONS ====================== */
+/* Botones tipo navegación (editor) */
 .nav-btn {
   font-family: "Island Moments", cursive;
   font-size: var(--nav-size);
@@ -150,7 +175,7 @@ h2 {
   outline: none;
 }
 
-/* === General text === */
+/* ============================== 5) TEXT & PLACEHOLDERS =================== */
 p {
   font-size: var(--p-size);
   max-width: 60ch;
@@ -161,7 +186,7 @@ u {
   text-underline-offset: 0.15em;
 }
 
-/* === Placeholders (visuales, sin texto real en el DOM) === */
+/* --- Placeholders --- */
 .ph:empty::before {
   content: attr(data-placeholder);
   opacity: 0.5;
@@ -211,6 +236,8 @@ u {
     "Noto Sans", Arial, sans-serif;
 }
 
+/* ------------------------------------------------------------------------- */
+
 .toolbar {
   display: flex;
   gap: min(3vw, 32px);
@@ -247,7 +274,7 @@ u {
   text-decoration: none;
 }
 
-/* === Paleta de colores (texto destacado) === */
+/* --- Paleta de colores (texto destacado) --- */
 .c-amarillo {
   color: #f7c873;
 }
@@ -264,7 +291,7 @@ u {
   color: #c9547d;
 }
 
-/* === Responsive === */
+/* --- Responsive tweaks (global) --- */
 @media (max-width: 640px) {
   :root {
     --h1-size: clamp(64px, 18vw, 150px);
@@ -300,7 +327,7 @@ u {
   }
 }
 
-/* === Utilidades de accesibilidad === */
+/* ============================== 6) UTILITIES ============================= */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -313,7 +340,7 @@ u {
   border: 0;
 }
 
-/* === Animations === */
+/* ============================== 7) ANIMATIONS ============================ */
 @keyframes blinkSoft {
   0%,
   100% {
@@ -324,8 +351,7 @@ u {
   }
 }
 
-/* === Editor de diario === */
-
+/* ============================== 8) PAGES — 8.1 Editor de diario ========= */
 /* Centrar h2 en página escribir */
 .page-escribir h2 {
   text-align: center;
@@ -379,7 +405,10 @@ u {
   text-align: center;
 }
 
-/* === Page: Diario (viewer) === */
+/* ============================== 8) PAGES — 8.2 Diario (viewer) ========== */
+
+/* ------------------------------------------------------------------------- */
+
 .diario-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -406,7 +435,7 @@ u {
   font-size: clamp(28px, 3.4vw, 42px);
 }
 
-/* Diario: en desktop solo scrollea la columna derecha */
+/* Diario: en desktop solo hace scroll la columna derecha */
 @media (min-width: 641px) {
   .diario-grid {
     grid-template-columns: 45% 55%;
@@ -445,7 +474,10 @@ u {
   }
 }
 
-/* === Page: Libros (viewer) === */
+/* ============================== 8) PAGES — 8.3 Libros (viewer) ========= */
+
+/* ------------------------------------------------------------------------- */
+
 .libros-list {
   list-style: none;
   padding: 0;
@@ -477,7 +509,7 @@ u {
   }
 }
 
-/* === Page: Extras (viewer) — grid 87dvh, deja 13dvh libre para nav fija === */
+/* ============================== 8) PAGES — 8.4 Extras (viewer) ========= */
 /* El <body> cuando está en page-extras actúa como contenedor grid propio
    (independiente del grid global), con dos filas: título (auto) + contenido (1fr).
    La altura total del contenedor se fija en 87dvh para reservar 13dvh libres
@@ -541,16 +573,8 @@ body.page-extras {
   font-size: clamp(28px, 3.4vw, 42px);
 }
 
-/* === Page: Capítulo (viewer) === */
-.page-capitulo .capitulo-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(12px, 2vw, 24px);
-  padding: clamp(16px, 4vw, 48px);
-}
-
-/* Capítulo: título principal */
+/* ============================== 8) PAGES — 8.5 Capítulo (viewer) ======== */
+/* Capítulo — título principal */
 .page-capitulo h1 {
   /* usa el h1 estándar de la web, solo añadimos un respiro inferior */
   padding-bottom: calc(var(--h1-gap-y) * 0.5);
@@ -562,13 +586,21 @@ body.page-extras {
   align-items: center;
 }
 
+.page-capitulo .capitulo-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+  padding: clamp(16px, 4vw, 48px);
+}
+
 .page-capitulo .cap-body {
   width: min(92vw, 76ch);
   margin: 0 auto;
   line-height: 1.5;
 }
 
-/* Capítulo: tipografía del contenido */
+/* Capítulo — tipografía del contenido */
 .page-capitulo .cap-body h3 {
   margin: 0 0 0.6em 0;
   font-weight: 400;
