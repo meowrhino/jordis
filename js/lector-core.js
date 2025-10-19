@@ -211,22 +211,54 @@ function extractContentFromHTML(html){
     const wrap = document.createElement('div');
     wrap.className = 'extras-item';
 
-    const h3 = document.createElement('h3');
-    const bonito = fmtFechaBonita(item.date || '');
-    h3.textContent = bonito || 'extra';
-
     const body = document.createElement('div');
     body.className = 'extras-contenido';
     body.textContent = 'cargando...';
 
     const url = resolveDataPath(item.path || '');
     fetchText(url).then(html => {
-      const inner = extractContentFromHTML(html);
-      body.innerHTML = inner || '(vacío)';
-    }).catch(() => { body.textContent = '(no se pudo cargar)'; });
+      const inner = extractContentFromHTML(html) || '';
 
-    wrap.appendChild(h3);
-    wrap.appendChild(body);
+      // Parse inner HTML to extract a title h1/h2/h3 if present
+      const tmp = document.createElement('div');
+      tmp.innerHTML = inner;
+
+      const titleEl = tmp.querySelector('h1, h2, h3');
+      const titleText = (titleEl ? titleEl.textContent : (item.titulo || '')).trim() || 'extra';
+      if (titleEl) titleEl.remove(); // remove the in-body title to avoid duplication
+
+      // Build headings: H3 (title) then H4 (date · tema)
+      const h3 = document.createElement('h3');
+      h3.textContent = titleText;
+
+      const h4 = document.createElement('h4');
+      const bonito = fmtFechaBonita(item.date || '');
+      h4.textContent = [bonito, (item.tema || '').trim()].filter(Boolean).join(' · ');
+
+      // Inject into wrapper in the requested order (h4 before h3)
+      wrap.innerHTML = '';
+      wrap.appendChild(h4);
+      wrap.appendChild(h3);
+
+      // Set cleaned content
+      body.innerHTML = tmp.innerHTML || '(vacío)';
+      wrap.appendChild(body);
+    }).catch(() => {
+      // On error, still show minimal header
+      const h3 = document.createElement('h3');
+      h3.textContent = (item.titulo || item.tema || 'extra').trim();
+      const h4 = document.createElement('h4');
+      const bonito = fmtFechaBonita(item.date || '');
+      h4.textContent = [bonito, (item.tema || '').trim()].filter(Boolean).join(' · ');
+
+      wrap.innerHTML = '';
+      wrap.appendChild(h4);
+      wrap.appendChild(h3);
+
+      body.textContent = '(no se pudo cargar)';
+      wrap.appendChild(body);
+    });
+
     return wrap;
   }
 
