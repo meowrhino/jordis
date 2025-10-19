@@ -22,7 +22,15 @@ jobs:
 
       - name: Install (optional)
         run: |
-          if [ -f package.json ]; then npm ci; fi
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            echo "Lockfile found → running npm ci"
+            npm ci --no-audit --no-fund
+          elif [ -f package.json ]; then
+            echo "No lockfile → running npm install"
+            npm install --no-audit --no-fund
+          else
+            echo "No package.json → skipping install"
+          fi
 
       - name: Build indices
         run: |
