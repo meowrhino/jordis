@@ -460,38 +460,32 @@ u {
   .libros-list li { margin: clamp(20px, 5vw, 44px) 0; }
 }
 
-/* === Page: Extras (viewer) === */
-.page-extras .extras-main{
-  padding: var(--nav-offset); /* alinea con botón 'casa' */
+/* === Page: Extras (viewer) — grid 87dvh, deja 13dvh libre para nav fija === */
+/* El <body> cuando está en page-extras actúa como contenedor grid propio
+   (independiente del grid global), con dos filas: título (auto) + contenido (1fr).
+   La altura total del contenedor se fija en 87dvh para reservar 13dvh libres
+   de forma constante en cualquier viewport. */
+body.page-extras {
+  display: grid;                 /* forzamos grid local */
+  grid-template-rows: auto 1fr;  /* fila 1 = h1, fila 2 = contenido scrolleable */
+  min-height: 87dvh;             /* siempre deja 13dvh libre para la nav fija */
 }
-.page-extras .extras-list{
-  list-style: none;
-  margin: 0;
-  padding: 0;
+
+/* Contenido de extras */
+.page-extras .extras-main {
+  padding: var(--nav-offset);
+  padding-top: 0;                /* sin padding arriba, como pides */
+  overflow: auto;                /* scroll interno si crece */
+  min-height: 0;                 /* permite que el grid-item en 1fr pueda encoger */
+  max-height: 72dvh
 }
-.page-extras .extras-item{
-  margin: clamp(16px, 3vw, 36px) 0;
-}
-.page-extras .extras-item h3{
+
+.page-extras .extras-list { list-style: none; margin: 0; padding: 0; }
+.page-extras .extras-item { margin: clamp(16px, 3vw, 36px) 0; }
+.page-extras .extras-item h3 {
   margin: 0 0 0.6em 0;
   font-weight: 400;
   font-size: clamp(28px, 3.4vw, 42px);
-}
-/* Desktop: columna con scroll si es larga */
-@media (min-width: 481px){
-  .page-extras .extras-main{
-    min-height: 100dvh;
-    overflow: auto;
-    padding-bottom: 0;
-  }
-}
-/* Móvil: altura como diario (62dvh) para no tapar la nav fija */
-@media (max-width: 480px){
-  .page-extras .extras-main{
-    max-height: 62dvh;
-    overflow: auto;
-    padding-bottom: 0;
-  }
 }
 
 /* === Page: Capítulo (viewer) === */
