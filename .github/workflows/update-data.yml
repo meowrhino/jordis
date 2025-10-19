@@ -34,7 +34,15 @@ jobs:
 
       - name: Build indices
         run: |
-          npm run build:indices || node scripts/build-indices.js
+          if [ -f js/build-indices.js ]; then
+            echo "Running js/build-indices.js"
+            node js/build-indices.js
+          elif npm run | grep -qE '^  build:indices'; then
+            echo "Running npm run build:indices"
+            npm run build:indices
+          else
+            echo "No build script found."
+          fi
 
       - name: Commit & push if changed
         run: |
