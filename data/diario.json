@@ -1,26 +1,50 @@
 [
   {
-    "path": "data/diario/2025-10-17_23-59_barcelona.html",
-    "date": "2025-10-17",
-    "time": "23:59:00",
+    "path": "data/diario/2025-12-24_17-43_barcelona.html",
+    "date": "2025-12-24",
+    "time": "17:43:00",
     "place": "barcelona"
   },
   {
-    "path": "data/diario/2025-10-16_09-38_barcelona.html",
-    "date": "2025-10-16",
-    "time": "09:38:00",
+    "path": "data/diario/2025-12-23_19-05_barcelona.html",
+    "date": "2025-12-23",
+    "time": "19:05:00",
     "place": "barcelona"
   },
   {
-    "path": "data/diario/2025-10-16_09-37_barcelona.html",
-    "date": "2025-10-16",
-    "time": "09:37:00",
+    "path": "data/diario/2025-12-22_17-14_barcelona.html",
+    "date": "2025-12-22",
+    "time": "17:14:00",
     "place": "barcelona"
   },
   {
-    "path": "data/diario/2025-10-16_09-36_barcelona.html",
-    "date": "2025-10-16",
-    "time": "09:36:00",
+    "path": "data/diario/2025-12-21_10-16_barcelona.html",
+    "date": "2025-12-21",
+    "time": "10:16:00",
+    "place": "barcelona"
+  },
+  {
+    "path": "data/diario/2025-12-20_11-12_barcelona.html",
+    "date": "2025-12-20",
+    "time": "11:12:00",
+    "place": "barcelona"
+  },
+  {
+    "path": "data/diario/2025-10-23_17-05_badalona.html",
+    "date": "2025-10-23",
+    "time": "17:05:00",
+    "place": "badalona"
+  },
+  {
+    "path": "data/diario/2025-10-22_20-34_badalona.html",
+    "date": "2025-10-22",
+    "time": "20:34:00",
+    "place": "badalona"
+  },
+  {
+    "path": "data/diario/2025-10-19_17-43_barcelona.html",
+    "date": "2025-10-19",
+    "time": "17:43:00",
     "place": "barcelona"
   }
 ]
