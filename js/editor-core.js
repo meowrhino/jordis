@@ -113,15 +113,24 @@
     }
   };
 
+  // Quita líneas vacías colgando al final del contenido (artefactos del contenteditable
+  // cuando se pulsa Enter sin escribir nada): <br>, <div><br></div>, <div></div>, <p><br></p>, <p></p>…
+  const trimTrailingEmpty = html => {
+    let s = (html || '').trim();
+    const emptyTail = /(?:<br\s*\/?>|<(div|p)[^>]*>\s*(?:<br\s*\/?>|&nbsp;|\s)*<\/\1>)\s*$/i;
+    while (emptyTail.test(s)) s = s.replace(emptyTail, '').trim();
+    return s;
+  };
+
   // ——— Payload builders per editor type ———
   const payloadBuilders = {
-    diario(root, editorSel){ const ed=root.querySelector(editorSel); return (ed?.innerHTML || '').trim(); },
-    capitulos(root, editorSel){ const ed=root.querySelector(editorSel); const titulo = atoms.getTitulo(root); const body = (ed?.innerHTML || '').trim(); return `<h3>${titulo||''}</h3>\n${body}`; },
-    extras(root, editorSel){ 
-      const ed = root.querySelector(editorSel); 
-      const titulo = atoms.getTitulo(root); 
-      const body = (ed?.innerHTML || '').trim(); 
-      return `<h3>${titulo||''}</h3>\n${body}`; 
+    diario(root, editorSel){ const ed=root.querySelector(editorSel); return trimTrailingEmpty(ed?.innerHTML || ''); },
+    capitulos(root, editorSel){ const ed=root.querySelector(editorSel); const titulo = atoms.getTitulo(root); const body = trimTrailingEmpty(ed?.innerHTML || ''); return `<h3>${titulo||''}</h3>\n${body}`; },
+    extras(root, editorSel){
+      const ed = root.querySelector(editorSel);
+      const titulo = atoms.getTitulo(root);
+      const body = trimTrailingEmpty(ed?.innerHTML || '');
+      return `<h3>${titulo||''}</h3>\n${body}`;
     }
   };
 

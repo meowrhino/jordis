@@ -76,8 +76,10 @@ async function buildForCategory(cat) {
 
       if (cat === 'diario') {
         const base = e.name.replace(/\.[^.]+$/, '');
-        const parts = base.split('_'); // ej: 2025-10-16_09-36_barcelona
-        item.place = parts[parts.length - 1] || '';
+        const parts = base.split('_'); // ej: 2025-10-16_09-36_barcelona o 2026-05-16_18-08_platja_del_llevant
+        // Todo lo que va después de fecha (parts[0]) y hora (parts[1]) es el lugar,
+        // que puede contener varias palabras separadas por "_" al sanear espacios.
+        item.place = parts.slice(2).join(' ').trim();
       }
 
       if (cat === 'libros') {
